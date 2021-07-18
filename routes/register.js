@@ -10,7 +10,8 @@ router.get('/', (req, res) => {
 
 router.get('/:verification_code', (req, res) => {
     const verification_code = req.params.verification_code;
-    user.verifyUser(verification_code);
+    user.confirmUser(verification_code)
+        .then((r) => console.log(r));
 
     res.end();
 });
@@ -21,8 +22,9 @@ router.post('/', (req, res) => {
     const password = req.body.password;
     const verificationCode = crypto.randomBytes(16).toString('hex');
 
+    let userExists;
     return Promise.all([
-        user.userExists(email),
+        userExists = user.userExists(email),
         user.insertUnconfirmed(email, password, verificationCode)
     ]).then(() => {
         /*
@@ -34,7 +36,7 @@ router.post('/', (req, res) => {
         
         Please click the link below to verify your account.
         
-        http://localhost:3000/verify/${verificationCode}
+        http://localhost:3000/register/${verificationCode}
         `;
 
         const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');

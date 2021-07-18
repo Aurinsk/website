@@ -2,6 +2,8 @@ const pool = require("../utils/db.js");
 const SqlString = require('sqlstring');
 const bcrypt = require('bcrypt');
 
+// this should probably all be in a class but module.exports is fine for now until beta
+
 module.exports = {
     // check if user exists in user table or unconfirmed users table
     async userExists(email) {
@@ -47,7 +49,9 @@ module.exports = {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            const query = SqlString.format('INSERT INTO unconfirmed_users (email, password, verification_code) VALUES (?, ?, ?)', [email, hashedPassword, verificationCode]);
+            const id = Math.floor(10000000 + Math.random() * 90000000);
+
+            const query = SqlString.format('INSERT INTO unconfirmed_users (email, password, id, verification_code) VALUES (?, ?, ?, ?)', [email, hashedPassword, id, verificationCode]);
 
             const conn = await pool.getConnection();
             const response = await conn.query(query);
@@ -59,15 +63,15 @@ module.exports = {
         }
     },
 
-    async verifyUser(verificationCode) {
-        const query = SqlString.format('INSERT INTO users (email, password) SELECT email, password FROM unconfirmed_users WHERE verification_code = ?', [verificationCode]);
+    async confirmUser(verificationCode) {
+        const copyQuery = SqlString.format('INSERT INTO users (email, password, id) SELECT email, password, id FROM unconfirmed_users WHERE verification_code = ?; DELETE FROM unconfirmed_users WHERE verification_code = ?', [verificationCode, verificationCode]);
 
         const conn = await pool.getConnection();
-        const verifyUser = await conn.query(query);
-
-        console.log(verifyUser);
+        const verifyUser = await conn.query(copyQuery);
 
         conn.end();
+
+        return true;
     }
 
 }
