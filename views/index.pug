@@ -1,5 +1,11 @@
 extends layout
 
 block content
-  h1 Aurinsk
-  p The next generation of Minecraft server monitoring
+  //.d-flex.flex-column.min-vh-100.justify-content-center.align-items-center
+  //  h1.display-1.float-left The next generation of Minecraft server monitoring
+  .d-flex.flex-column.min-vh-100.justify-content-center.align-items-center
+    h1.display-1.font-weight-bold The next generation of Minecraft server monitoring
+    p Join the waiting list for our alpha testing
+    form
+      input.form-control.me-2(type='email' placeholder='Enter your email address' aria-label='Search')
+      button.btn.btn-outline-primary(type='submit' id="submit") Search
