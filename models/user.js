@@ -25,14 +25,18 @@ module.exports = {
     // get user from db
     async getUser(email) {
         try {
-            email = sqlstring.escape(email);
+            const query = SqlString.format('SELECT * FROM users WHERE email=?', [email]);
+
             const conn = await pool.getConnection();
-            const rows = await conn.query(`SELECT * FROM users WHERE email=${email}`);
+            const rows = await conn.query(query);
 
             conn.end();
 
             if (rows.length > 0) {
-                return rows[0];
+                return {
+                    username: rows[0].username,
+                    password: rows[0].password
+                }
             } else {
                 return false;
             }
@@ -57,6 +61,8 @@ module.exports = {
             const response = await conn.query(query);
 
             conn.end();
+
+            return true;
 
         } catch (e) {
             throw e;
