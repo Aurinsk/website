@@ -6,6 +6,11 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
 router.get('/', (req, res) => {
+    if (user.checkLoggedIn(req, res)) {
+        res.redirect('/home');
+        return;
+    }
+
     res.render('register', {emailExists: req.flash('emailExists')});
 });
 
@@ -29,14 +34,17 @@ router.post('/', async (req, res) => {
 
     // values are escaped in user model
     const userExists = await user.userExists(email);
-    const insertUnconfirmed = await user.insertUnconfirmed(email, password, verificationCode);
 
+    // check if email already exists
     if (userExists) {
         req.flash('emailExists', true);
         res.redirect('/register');
         return;
     }
 
+    const insertUnconfirmed = await user.insertUnconfirmed(email, password, verificationCode);
+
+    // error handling for insertUnconfirmed
     if (!insertUnconfirmed) {
         req.flash('error', true);
         res.redirect('/register');

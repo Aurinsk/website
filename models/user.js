@@ -1,6 +1,8 @@
 const pool = require("../utils/db.js");
 const SqlString = require('sqlstring');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv').config();
 
 // this should probably all be in a class but module.exports is fine for now until beta
 
@@ -78,6 +80,44 @@ module.exports = {
         conn.end();
 
         return true;
+    },
+
+    loginUser(res, email) {
+        const userInfo = {
+            email: email
+        };
+
+        const signed = jwt.sign(userInfo, process.env.JWT_SECRET);
+        res.cookie('user', signed);
+    },
+
+    checkLoggedIn(req, res) {
+        if (!req.cookies.user) {
+            return false;
+        }
+
+        const user = jwt.verify(req.cookies.user, process.env.JWT_SECRET);
+
+        if (user.email) {
+            return true;
+        } else return false;
+    },
+
+    checkLoggedInRedirect(req, res) {
+        if (!req.cookies.user) {
+            res.redirect('/login');
+            return;
+        }
+
+        const user = jwt.verify(req.cookies.user, process.env.JWT_SECRET);
+
+        if (!user.email) {
+            res.redirect('/login');
+            return;
+        }
+
+        return true;
+
     }
 
 }
