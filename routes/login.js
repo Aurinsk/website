@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
 
     if (!userInfo) {
         req.flash('invalid', true);
-        res.redirect('login');
+        res.redirect('/');
         return;
     }
 
@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
 
     if (!validation) {
         req.flash('invalid', true);
-        res.redirect('login');
+        res.redirect('/');
         return;
     }
 
