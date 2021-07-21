@@ -1,0 +1,55 @@
+doctype html
+html
+    head
+        title Dashboard
+        link(href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' rel='stylesheet' integrity='sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC' crossorigin='anonymous')
+        link(rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css')
+        link(rel="stylesheet" href="/stylesheets/dashboard-style.css")
+        script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js")
+        block style
+            
+    body
+        nav.navbar.navbar-expand-lg.navbar-light.bg-light
+            .container-fluid
+                a.navbar-brand(href='/dashboard')
+                    img.d-inline-block(src='/images/222x60logo_new.png')
+                button.navbar-toggler(type='button' data-bs-toggle='collapse' data-bs-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation')
+                    span.navbar-toggler-icon
+                #navbarSupportedContent.collapse.navbar-collapse
+                    ul.navbar-nav.me-auto.mb-2.mb-lg-0
+                        li.nav-item
+                            a.nav-link(aria-current='page' href='/dashboard') Dashboard
+                        li.nav-item
+                            a.nav-link(href='/dashboard/minecraftmonitors') Minecraft Monitors
+                        li.nav-item
+                            a.nav-link.disabled(href='#' tabindex='-1' aria-disabled='true') Linux Monitors (Coming in Beta)
+                    .d-flex
+                        a.btn.btn-primary(href="/logout" type='submit') Logout
+
+        block content
+
+        footer.page-footer.font-small.blue
+            .footer-copyright.text-center.py-3
+                .alert.alert-danger(role='alert' id="alphaTestingWarning")
+                    | Aurinsk is in alpha testing. Bugs and errors are expected,&nbsp;
+                    a(href='' data-bs-toggle="modal" data-bs-target="#reportErrorModal") please report them!
+
+        #reportErrorModal.modal.fade(tabindex='-1')
+            .modal-dialog
+                .modal-content
+                    .modal-header
+                        h5.modal-title Report Bug/Issue
+                        button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+                    .modal-body
+                        form
+                            .mb-3
+                                label.form-label(for="describeError") Describe the error you are receiving in detail
+                                textarea.form-control(id="describeError")
+                                .form-text We analyze all error reports in detail to improve the user experience. User error reporting is incredibly valuable to us during our development process.
+                                .spinner-border(role="status" hidden="true" id="reportSpinner")
+                                button.btn.btn-primary(type="submit" id="submitReport") Submit Report
+
+
+
+        script(src='/js/dashboard-front.js')
+        script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js' integrity='sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM' crossorigin='anonymous')

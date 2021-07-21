@@ -16,15 +16,22 @@ router.get('/', (req, res) => {
 
 router.get('/:verification_code', (req, res) => {
     const verification_code = req.params.verification_code;
+
+    if (verification_code.length < 32) {
+        res.redirect('/');
+        return;
+    }
+
     user.confirmUser(verification_code)
-        .then((r) => console.log(r));
+        .then((r) => console.log(r))
+        .catch((e) => handler.handle('register'))
 
     res.end();
 });
 
-router.get('/success', (req, res) => {
-    res.render('registerSuccess');
-});
+// router.get('/success', (req, res) => {
+//     res.render('registerSuccess');
+// });
 
 router.post('/', async (req, res) => {
     // get username and password into own consts
@@ -75,7 +82,7 @@ router.post('/', async (req, res) => {
         }
     });
 
-    res.redirect('/hello');
+    res.redirect('/dashboard');
 
     return true;
 });

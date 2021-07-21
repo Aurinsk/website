@@ -1,0 +1,18 @@
+.btn-primary {
+    background-color: #238ce8;
+}
+
+footer {
+    position: fixed;
+    height: 100px;
+    bottom: 0;
+    width: 100%;
+}
+
+#submitReport {
+    margin-top: 1rem;
+}
+
+#alphaTestingWarning {
+    top: 1.6rem;
+}

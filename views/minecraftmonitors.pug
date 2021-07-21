@@ -1,0 +1,42 @@
+extends dashboard-layout
+
+block style
+    link(rel="stylesheet" href="/stylesheets/minecraftmonitors-style.css")
+
+block content
+    .minecraftmonitor-header.text-center
+        h1 Minecraft Monitors
+        p View a comprehensive list of your Minecraft Server monitors here
+        button.btn.btn-primary.bi.bi-plus-lg(type='button' id="addMonitor" data-bs-toggle="modal" data-bs-target="#addMonitorModal") Add Monitor
+        button.btn.btn-primary.bi.bi-arrow-repeat(type='button' id="refreshMonitors") Refresh Monitors
+
+    table.table.justify-content-center
+        thead
+            tr
+                th(scope='col') Name
+                th(scope='col') Uptime Percentage
+                th(scope='col') Last Checked
+                th(scope='col') History
+        tbody
+            tr
+                td Mark
+                td Mark
+                td Mark
+                td Mark
+
+    #addMonitorModal.modal.fade(tabindex='-1')
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    h5.modal-title Add Minecraft Monitor
+                    button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+                .modal-body
+                    form
+                        .mb-3
+                            label.form-label(for='minecraftMonitorName') Minecraft Monitor Name
+                            input#minecraftMonitorName.form-control(type='email' aria-describedby='emailHelp')
+                            #emailHelp.form-text A descriptive name for your monitor to help you identify it
+
+                .modal-footer
+                    button.btn.btn-primary(type='button') Add Monitor
+                    button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel

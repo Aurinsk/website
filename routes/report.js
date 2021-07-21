@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const user = require('../models/user.js');
 
-router.get('/', (req, res) => {
-    res.send('home');
+router.post('/', (req, res) => {
+    console.log(req.body);
     res.end();
 });
 

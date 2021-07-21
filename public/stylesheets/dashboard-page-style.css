@@ -1,0 +1,9 @@
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.bg-primary {
+    background-color: #238ce8!important;
+    color: white;
+}

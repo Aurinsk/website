@@ -34,7 +34,7 @@ router.post('/', async (req, res) => {
 
     user.loginUser(res, email);
 
-    res.redirect('/home');
+    res.redirect('/dashboard');
 
     res.end();
 });
