@@ -12,6 +12,7 @@ const registerRouter = require('./routes/register');
 const logoutRouter = require('./routes/logout');
 const dashboardRouter = require('./routes/dashboard');
 const reportRouter = require('./routes/report');
+const waitingListRouter = require('./routes/waitinglist');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/register', registerRouter);
 app.use('/logout', logoutRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/report', reportRouter);
+app.use('/waitinglist', waitingListRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

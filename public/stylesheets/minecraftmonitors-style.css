@@ -6,3 +6,15 @@ table {
 #refreshMonitors {
     margin-left: 1rem;
 }
+
+#addMonitorFormSubmit {
+    margin-top: 0.5rem;
+}
+
+#downloadMessage {
+    margin-top: 0.5rem;
+}
+
+.alert.alert-secondary.text-center p {
+    margin-top: 1rem;
+}

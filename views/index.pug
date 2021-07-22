@@ -16,12 +16,15 @@ html
           else
             button.btn.btn-primary(type='button' id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal") Login
 
-    .d-flex.flex-column.min-vh-100.justify-content-center.align-items-center
+    #mainContent.d-flex.flex-column.min-vh-100.justify-content-center.align-items-center
       h1.display-1.font-weight-bold The next generation of Minecraft server monitoring
       p Join the waiting list for our alpha testing
       form(id="waitingList")
-        input.form-control.me-2.form-control-lg(type='email' placeholder='Enter your email address' aria-label='Search')
-        button.btn.btn-outline-primary(type='submit' id="submit") Get early access
+        input#waitingListEmail.form-control.me-2.form-control-lg(type='email' name='email' placeholder='Enter your email address' aria-label='Search' required)
+        .mb-3.form-check
+          input.form-check-input(type="checkbox" id="privacyPolicyCheck" required)
+          label.form-check-label(for="privacyPolicyCheck") You agree to our privacy policy
+        button#joinWaitingList.btn.btn-outline-primary(type='submit') Join the waiting list
 
     #loginModal.modal.fade(tabindex='-1' aria-labelledby='exampleModalLabel' aria-hidden='true')
       .modal-dialog

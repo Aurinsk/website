@@ -42,8 +42,7 @@ $(document).ready(() => {
         })
     });
 
-    const reportErrorModal = document.getElementById('reportErrorModal');
-    reportErrorModal.addEventListener('hidden.bs.modal', () => {
+    $('#reportErrorModal').on('hidden.bs.modal', () => {
         $('#describeError').val('');
         if ($('#successAlert').length) {
             $('#successAlert').remove();

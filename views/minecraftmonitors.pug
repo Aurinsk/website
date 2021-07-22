@@ -24,19 +24,27 @@ block content
                 td Mark
                 td Mark
 
-    #addMonitorModal.modal.fade(tabindex='-1')
+    #addMonitorModal.modal.fade(tabindex='-1' data-bs-backdrop="static")
         .modal-dialog
             .modal-content
                 .modal-header
                     h5.modal-title Add Minecraft Monitor
                     button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
                 .modal-body
-                    form
-                        .mb-3
+                    form#addMonitorForm
+                        .mb-3.monitor-name
                             label.form-label(for='minecraftMonitorName') Minecraft Monitor Name
-                            input#minecraftMonitorName.form-control(type='email' aria-describedby='emailHelp')
-                            #emailHelp.form-text A descriptive name for your monitor to help you identify it
+                            input#minecraftMonitorName.form-control(type='text' aria-describedby='emailHelp' required)
+                            #minecraftMonitorNameHelp.form-text A descriptive name for your monitor to help you identify it
+                        .mb-3.ip-address
+                            label.form-label(for='minecraftMonitorName') IP Address
+                            input#ipAddress.form-control(type='text' aria-describedby='emailHelp' pattern="^((\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(\\d{1,2}|1\\d\\d|2[0-4]\\d|25[0-5])$" required)
+                            #ipAddressHelp.form-text The IP address of your Minecraft server, for us to identify it
+
+                        button#addMonitorFormSubmit.btn.btn-primary(type='submit') Add Monitor
 
                 .modal-footer
-                    button.btn.btn-primary(type='button') Add Monitor
                     button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cancel
+
+block scripts
+    script(src="/js/minecraftmonitors-front.js")

@@ -41,3 +41,16 @@
 .btn-primary {
     background-color: #238ce8;
 }
+
+#waitingListSuccess {
+    margin-top: 1rem;
+}
+
+#waitingListAlreadyExists {
+    margin-top: 1rem;
+}
+
+.mb-3.form-check {
+    font-size: 15px;
+    margin-top: 0.5rem;
+}
