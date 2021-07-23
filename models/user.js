@@ -89,6 +89,7 @@ module.exports = {
 
         const signed = jwt.sign(userInfo, process.env.JWT_SECRET);
         res.cookie('user', signed);
+        res.cookie('email', email);
     },
 
     checkLoggedIn(req, res) {
