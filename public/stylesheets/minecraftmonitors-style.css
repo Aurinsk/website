@@ -18,3 +18,8 @@ table {
 .alert.alert-secondary.text-center p {
     margin-top: 1rem;
 }
+
+.monitor-button:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}

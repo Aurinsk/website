@@ -41,15 +41,16 @@ html
                         h5.modal-title Report Bug/Issue
                         button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
                     .modal-body
-                        form
+                        form(id="reportErrorForm")
                             .mb-3
                                 label.form-label(for="describeError") Describe the error you are receiving in detail
-                                textarea.form-control(id="describeError")
+                                textarea.form-control(id="describeError" required)
                                 .form-text We analyze all error reports in detail to improve the user experience. User error reporting is incredibly valuable to us during our development process.
                                 .spinner-border(role="status" hidden="true" id="reportSpinner")
                                 button.btn.btn-primary(type="submit" id="submitReport") Submit Report
 
         block scripts
 
+        script(src='/js/bootbox.all.min.js')
         script(src='/js/dashboard-front.js')
         script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js' integrity='sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM' crossorigin='anonymous')

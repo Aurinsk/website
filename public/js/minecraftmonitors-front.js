@@ -1,10 +1,35 @@
-$.get('http://192.168.1.251/api/query/hwgilbert16@gmail.com', ((data) => {
+$.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
     for (const row of data) {
-        const monitor = document.createElement('tr');
-        const name = document.createElement('td');
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        const name = document.createElement('span');
+        const escapedRowName = row.name.replace(/\s+/g, '-').toLowerCase();
         name.textContent = row.name;
-        monitor.append(name);
-        $('tbody').append(monitor);
+        name.className = 'monitor-button';
+        console.log(row);
+
+        name.addEventListener('click', () => {
+            bootbox.dialog({
+                title: row.name,
+                closeButton: false,
+                message: 'Monitor',
+                size: 'large',
+                onEscape: true,
+                backdrop: true,
+                className: escapedRowName,
+                id: escapedRowName
+            });
+
+            const closeButton = document.createElement('button');
+            closeButton.className = 'btn-close';
+            closeButton.setAttribute('data-bs-dismiss', 'modal');
+            $(`.${escapedRowName} .modal-header`).append(closeButton);
+            $(`.${escapedRowName}`).attr('id', escapedRowName);
+        });
+
+        tr.append(td);
+        td.append(name);
+        $('tbody').append(tr);
     }
 }));
 

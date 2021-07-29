@@ -11,7 +11,7 @@ $(document).ready(() => {
             break;
     }
 
-    $('#submitReport').click((e) => {
+    $('#reportErrorForm').submit((e) => {
         e.preventDefault();
 
         const errorReport = $('#describeError').val();
