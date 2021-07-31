@@ -19,7 +19,7 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             bootbox.dialog({
                 title: row.name,
                 closeButton: false,
-                message: ' ',
+                message: 'Time is shown in UTC',
                 size: 'large',
                 onEscape: true,
                 backdrop: true,
@@ -31,8 +31,6 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                         clearTimeout(cpuTimeout);
                         clearTimeout(memoryTimeout);
                         clearTimeout(playercountTimeout);
-
-                        console.log('cleared');
                     }
                 }
             });
@@ -62,9 +60,63 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                         $(`.${escapedRowName} .modal-body`).append(canvas);
                     }
 
-                    // if ($('canvas#memory').length && $('canvas#playercount')) {
-                    //     $('canvas#cpu').insertBefore($('canvas#memory'));
-                    // }
+                    // get current time in hh:mm
+                    let currentTime = new Date().toLocaleTimeString('en', {
+                        timeStyle: 'short',
+                        hour12: false,
+                        timeZone: 'UTC'
+                    })
+
+                    // get the most recent time by analytics
+                    let recentAnalyticsTime = new Date(data[1][data[1].length - 1]).toLocaleTimeString('en', {
+                        timeStyle: 'short',
+                        hour12: false,
+                        timeZone: 'UTC'
+                    });
+
+                    // add null to the data[1] array for any empty values
+                    if (currentTime !== recentAnalyticsTime) {
+                        const dateTimeNow = new Date();
+                        const dateAnalyticsTime = new Date(data[1][data[1].length - 1]);
+
+                        const minutesDifference = Math.floor((dateTimeNow.getTime() - dateAnalyticsTime.getTime()) / 1000 / 60);
+
+                        for (let i = 1; i <= minutesDifference; i++) {
+                            //data[1].push(dateTimeNow.setMinutes(dateTimeNow.getMinutes() + 1));
+                            dateAnalyticsTime.setMinutes(dateAnalyticsTime.getMinutes() + 1);
+                            data[1].push(dateAnalyticsTime.toISOString());
+                            data[0].push(null);
+                        }
+                    }
+
+                    // iterate over data[1] to check if the difference between any two values is > 1 minute
+                    for (let i = 0; i < data[1].length - 1; i++) {
+                        let time1 = new Date(data[1][i]);
+                        time1.setSeconds(0, 0);
+                        let time2 = new Date(data[1][i + 1]);
+                        time2.setSeconds(0, 0);
+
+                        const position = i;
+
+                        let correctTime2 = new Date(data[1][i]);
+                        correctTime2.setMinutes(time1.getMinutes() + 1);
+                        correctTime2.setSeconds(0, 0);
+
+                        // need to check if time2 does not equal time1 + 1 minute (correctTime2)
+                        // need to check if the second value does not equal the first time + 1 minute
+                        if (time2.toISOString() !== correctTime2.toISOString()) {
+                            const minutesDifference = Math.floor((time2.getTime() - time1.getTime()) / 1000 / 60);
+
+                            for (let i = 1; i <= minutesDifference; i++) {
+                                time1.setMinutes(time1.getMinutes() + 1);
+                                if (time1.toISOString() === time2.toISOString()) {
+                                    break;
+                                }
+                                data[1].splice(position + i, 0, time1.toISOString());
+                                data[0].splice(position + i, 0, null);
+                            }
+                        }
+                    }
 
                     // convert iso time to human readable format
                     for (let i = 0; i < data[1].length; i++) {
@@ -86,7 +138,9 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                                 borderColor: 'rgb(67, 160, 231)',
                                 data: data[0],
                                 pointRadius: 1,
-                                fill: true
+                                fill: true,
+                                spanGaps: false,
+                                displayLine: true
                             }]
                         },
                         options: {
@@ -160,6 +214,64 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                         $(`.${escapedRowName} .modal-body`).append(canvas);
                     }
 
+                    // get current time in hh:mm
+                    let currentTime = new Date().toLocaleTimeString('en', {
+                        timeStyle: 'short',
+                        hour12: false,
+                        timeZone: 'UTC'
+                    })
+
+                    // get the most recent time by analytics
+                    let recentAnalyticsTime = new Date(data[1][data[1].length - 1]).toLocaleTimeString('en', {
+                        timeStyle: 'short',
+                        hour12: false,
+                        timeZone: 'UTC'
+                    });
+
+                    // add null to the data[1] array for any empty values
+                    if (currentTime !== recentAnalyticsTime) {
+                        const dateTimeNow = new Date();
+                        const dateAnalyticsTime = new Date(data[1][data[1].length - 1]);
+
+                        const minutesDifference = Math.floor((dateTimeNow.getTime() - dateAnalyticsTime.getTime()) / 1000 / 60);
+
+                        for (let i = 1; i <= minutesDifference; i++) {
+                            //data[1].push(dateTimeNow.setMinutes(dateTimeNow.getMinutes() + 1));
+                            dateAnalyticsTime.setMinutes(dateAnalyticsTime.getMinutes() + 1);
+                            data[1].push(dateAnalyticsTime.toISOString());
+                            data[0].push(null);
+                        }
+                    }
+
+                    // iterate over data[1] to check if the difference between any two values is > 1 minute
+                    for (let i = 0; i < data[1].length - 1; i++) {
+                        let time1 = new Date(data[1][i]);
+                        time1.setSeconds(0, 0);
+                        let time2 = new Date(data[1][i + 1]);
+                        time2.setSeconds(0, 0);
+
+                        const position = i;
+
+                        let correctTime2 = new Date(data[1][i]);
+                        correctTime2.setMinutes(time1.getMinutes() + 1);
+                        correctTime2.setSeconds(0, 0);
+
+                        // need to check if time2 does not equal time1 + 1 minute (correctTime2)
+                        // need to check if the second value does not equal the first time + 1 minute
+                        if (time2.toISOString() !== correctTime2.toISOString()) {
+                            const minutesDifference = Math.floor((time2.getTime() - time1.getTime()) / 1000 / 60);
+
+                            for (let i = 1; i <= minutesDifference; i++) {
+                                time1.setMinutes(time1.getMinutes() + 1);
+                                if (time1.toISOString() === time2.toISOString()) {
+                                    break;
+                                }
+                                data[1].splice(position + i, 0, time1.toISOString());
+                                data[0].splice(position + i, 0, null);
+                            }
+                        }
+                    }
+
                     for (let i = 0; i < data[1].length; i++) {
                         data[1][i] = new Date(data[1][i]).toLocaleTimeString('en', {
                             timeStyle: 'short',
@@ -178,7 +290,8 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                                 borderColor: 'rgb(255, 183, 43)',
                                 data: data[0],
                                 pointRadius: 1,
-                                fill: true
+                                fill: true,
+                                spanGaps: false
                             }]
                         },
                         options: {
@@ -248,6 +361,64 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                         $(`.${escapedRowName} .modal-body`).append(canvas);
                     }
 
+                    // get current time in hh:mm
+                    let currentTime = new Date().toLocaleTimeString('en', {
+                        timeStyle: 'short',
+                        hour12: false,
+                        timeZone: 'UTC'
+                    })
+
+                    // get the most recent time by analytics
+                    let recentAnalyticsTime = new Date(data[1][data[1].length - 1]).toLocaleTimeString('en', {
+                        timeStyle: 'short',
+                        hour12: false,
+                        timeZone: 'UTC'
+                    });
+
+                    // add null to the data[1] array for any empty values
+                    if (currentTime !== recentAnalyticsTime) {
+                        const dateTimeNow = new Date();
+                        const dateAnalyticsTime = new Date(data[1][data[1].length - 1]);
+
+                        const minutesDifference = Math.floor((dateTimeNow.getTime() - dateAnalyticsTime.getTime()) / 1000 / 60);
+
+                        for (let i = 1; i <= minutesDifference; i++) {
+                            //data[1].push(dateTimeNow.setMinutes(dateTimeNow.getMinutes() + 1));
+                            dateAnalyticsTime.setMinutes(dateAnalyticsTime.getMinutes() + 1);
+                            data[1].push(dateAnalyticsTime.toISOString());
+                            data[0].push(null);
+                        }
+                    }
+
+                    // iterate over data[1] to check if the difference between any two values is > 1 minute
+                    for (let i = 0; i < data[1].length - 1; i++) {
+                        let time1 = new Date(data[1][i]);
+                        time1.setSeconds(0, 0);
+                        let time2 = new Date(data[1][i + 1]);
+                        time2.setSeconds(0, 0);
+
+                        const position = i;
+
+                        let correctTime2 = new Date(data[1][i]);
+                        correctTime2.setMinutes(time1.getMinutes() + 1);
+                        correctTime2.setSeconds(0, 0);
+
+                        // need to check if time2 does not equal time1 + 1 minute (correctTime2)
+                        // need to check if the second value does not equal the first time + 1 minute
+                        if (time2.toISOString() !== correctTime2.toISOString()) {
+                            const minutesDifference = Math.floor((time2.getTime() - time1.getTime()) / 1000 / 60);
+
+                            for (let i = 1; i <= minutesDifference; i++) {
+                                time1.setMinutes(time1.getMinutes() + 1);
+                                if (time1.toISOString() === time2.toISOString()) {
+                                    break;
+                                }
+                                data[1].splice(position + i, 0, time1.toISOString());
+                                data[0].splice(position + i, 0, null);
+                            }
+                        }
+                    }
+
                     for (let i = 0; i < data[1].length; i++) {
                         data[1][i] = new Date(data[1][i]).toLocaleTimeString('en', {
                             timeStyle: 'short',
@@ -266,7 +437,8 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                                 borderColor: 'rgb(65, 255, 111)',
                                 data: data[0],
                                 pointRadius: 1,
-                                fill: true
+                                fill: true,
+                                spanGaps: false
                             }]
                         },
                         options: {
