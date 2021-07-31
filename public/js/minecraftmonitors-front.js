@@ -1,6 +1,7 @@
 let cpuTimeout;
 let memoryTimeout;
 let playercountTimeout;
+let reorderGraphsTimeout;
 
 $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
     // loop through all of the rows returned from api
@@ -41,6 +42,9 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             closeButton.setAttribute('data-bs-dismiss', 'modal');
             $(`.${escapedRowName} .modal-header`).append(closeButton);
             $(`.${escapedRowName}`).attr('id', escapedRowName);
+
+            // set modal body to hidden until reordering of graphs is complete
+            //$(`.${escapedRowName}`).attr('hidden', 'true');
 
             function cpuGraph() {
                 $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/1h`, ((data) => {
@@ -482,9 +486,16 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                 }))
             }
 
+            // needed to reorder the graphs to be cpu -> memory -> playercount, top to bottom
+            // $.when(cpuGraph(), memoryGraph(), playercountGraph()).done(() => {
+            //     $('canvas#cpu').insertBefore($('canvas#memory'));
+            //     $('canvas#playercount').appendTo('.modal-body');
+            // })
+
             cpuGraph();
             memoryGraph();
             playercountGraph();
+
         });
 
         tr.append(td);
