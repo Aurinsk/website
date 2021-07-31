@@ -1,30 +1,318 @@
+let cpuTimeout;
+let memoryTimeout;
+let playercountTimeout;
+
 $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
+    // loop through all of the rows returned from api
     for (const row of data) {
+        // create table row
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         const name = document.createElement('span');
         const escapedRowName = row.name.replace(/\s+/g, '-').toLowerCase();
         name.textContent = row.name;
         name.className = 'monitor-button';
-        console.log(row);
 
+        // event listener on monitor name in graph
         name.addEventListener('click', () => {
+            // create modal with bootbox
             bootbox.dialog({
                 title: row.name,
                 closeButton: false,
-                message: 'Monitor',
+                message: ' ',
                 size: 'large',
                 onEscape: true,
                 backdrop: true,
                 className: escapedRowName,
-                id: escapedRowName
+                id: escapedRowName,
+                onHidden: () => {
+                    // clear all of the 1 min get requests to api for graph data
+                    if (!isNaN(cpuTimeout) && !isNaN(memoryTimeout) && !isNaN(playercountTimeout)) {
+                        clearTimeout(cpuTimeout);
+                        clearTimeout(memoryTimeout);
+                        clearTimeout(playercountTimeout);
+
+                        console.log('cleared');
+                    }
+                }
             });
 
+            // replace the close button in the modal since bootbox's one is broken
             const closeButton = document.createElement('button');
             closeButton.className = 'btn-close';
             closeButton.setAttribute('data-bs-dismiss', 'modal');
             $(`.${escapedRowName} .modal-header`).append(closeButton);
             $(`.${escapedRowName}`).attr('id', escapedRowName);
+
+            function cpuGraph() {
+                $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/1h`, ((data) => {
+
+                    // if the canvas already exists, remove it, and recreate it
+                    // used for refreshing the graphs every minute
+                    if ($(`canvas#cpu`).length) {
+                        $(`canvas#cpu`).remove();
+                        const canvas = document.createElement('canvas');
+                        canvas.setAttribute('id', 'cpu');
+                        canvas.className = escapedRowName;
+                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                    } else {
+                        const canvas = document.createElement('canvas');
+                        canvas.setAttribute('id', 'cpu');
+                        canvas.className = escapedRowName;
+                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                    }
+
+                    // if ($('canvas#memory').length && $('canvas#playercount')) {
+                    //     $('canvas#cpu').insertBefore($('canvas#memory'));
+                    // }
+
+                    // convert iso time to human readable format
+                    for (let i = 0; i < data[1].length; i++) {
+                        data[1][i] = new Date(data[1][i]).toLocaleTimeString('en', {
+                            timeStyle: 'short',
+                            hour12: false,
+                            timeZone: 'UTC'
+                        });
+                    }
+
+                    // create chartjs chart
+                    const chart = new Chart($(`canvas#cpu`), {
+                        type: 'line',
+                        data: {
+                            labels: data[1],
+                            datasets: [{
+                                label: 'CPU Usage',
+                                backgroundColor: 'rgb(67, 160, 231, 0.1)',
+                                borderColor: 'rgb(67, 160, 231)',
+                                data: data[0],
+                                pointRadius: 1,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            // allow to hover over graph and still get point tooltip
+                            interaction: {
+                                intersect: false,
+                                mode: 'index',
+                            },
+                            scales: {
+                                y: {
+                                    ticks: {
+                                        // Include a percentage sign in the y axis ticks
+                                        callback: function(value, index, values) {
+                                            return (value * 100).toString() + "%";
+                                        }
+                                    },
+                                    beginAtZero: true,
+                                    max: 1
+                                },
+                                x: {
+                                    // put the minimum of x to the current time
+                                    suggestedMin: new Date().toLocaleTimeString('en', {
+                                        timeStyle: 'short',
+                                        hour12: false,
+                                        timeZone: 'UTC'
+                                    })
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        // add a percentage to the number when using the tooltip
+                                        label: function(tooltipItem, data) {
+                                            return (tooltipItem.raw * 100).toString() + "%";
+                                        },
+                                    }
+                                },
+                                // display title of graph
+                                title: {
+                                    display: true,
+                                    text: 'CPU Usage',
+                                    font: {
+                                        size: 24
+                                    }
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            }
+
+                        }
+                    });
+
+                    cpuTimeout = setTimeout(cpuGraph, 60000);
+                }))
+            }
+
+            function memoryGraph() {
+                $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/1h`, ((data) => {
+
+                    if ($(`canvas#memory`).length) {
+                        $(`canvas#memory`).remove();
+                        const canvas = document.createElement('canvas');
+                        canvas.setAttribute('id', 'memory');
+                        canvas.className = escapedRowName;
+                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                    } else {
+                        const canvas = document.createElement('canvas');
+                        canvas.setAttribute('id', 'memory');
+                        canvas.className = escapedRowName;
+                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                    }
+
+                    for (let i = 0; i < data[1].length; i++) {
+                        data[1][i] = new Date(data[1][i]).toLocaleTimeString('en', {
+                            timeStyle: 'short',
+                            hour12: false,
+                            timeZone: 'UTC'
+                        });
+                    }
+
+                    const chart = new Chart($('canvas#memory'), {
+                        type: 'line',
+                        data: {
+                            labels: data[1],
+                            datasets: [{
+                                label: 'Memory Usage',
+                                backgroundColor: 'rgb(255, 183, 43, 0.1)',
+                                borderColor: 'rgb(255, 183, 43)',
+                                data: data[0],
+                                pointRadius: 1,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            interaction: {
+                                intersect: false,
+                                mode: 'index',
+                            },
+                            scales: {
+                                y: {
+                                    ticks: {
+                                        // Include a percentage sign in the y axis ticks
+                                        callback: function(value, index, values) {
+                                            return (value / 1000).toString() + "GB";
+                                        }
+                                    },
+                                    beginAtZero: true
+                                },
+                                x: {
+                                    suggestedMin: new Date().toLocaleTimeString('en', {
+                                        timeStyle: 'short',
+                                        hour12: false,
+                                        timeZone: 'UTC'
+                                    })
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem, data) {
+                                            // convert kb to gb
+                                            return (tooltipItem.raw / 1000).toFixed(3) + "GB";
+                                        },
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Memory Usage',
+                                    font: {
+                                        size: 24
+                                    }
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            }
+
+                        }
+                    });
+
+                    memoryTimeout = setTimeout(memoryGraph, 60000);
+                }))
+            }
+
+            function playercountGraph() {
+                $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/player_count/1h`, ((data) => {
+
+                    if ($(`canvas#playercount`).length) {
+                        $(`canvas#playercount`).remove();
+                        const canvas = document.createElement('canvas');
+                        canvas.setAttribute('id', 'playercount');
+                        canvas.className = escapedRowName;
+                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                    } else {
+                        const canvas = document.createElement('canvas');
+                        canvas.setAttribute('id', 'playercount');
+                        canvas.className = escapedRowName;
+                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                    }
+
+                    for (let i = 0; i < data[1].length; i++) {
+                        data[1][i] = new Date(data[1][i]).toLocaleTimeString('en', {
+                            timeStyle: 'short',
+                            hour12: false,
+                            timeZone: 'UTC'
+                        });
+                    }
+
+                    const chart = new Chart($('canvas#playercount'), {
+                        type: 'line',
+                        data: {
+                            labels: data[1],
+                            datasets: [{
+                                label: 'Playercount',
+                                backgroundColor: 'rgb(65, 255, 111, 0.1)',
+                                borderColor: 'rgb(65, 255, 111)',
+                                data: data[0],
+                                pointRadius: 1,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            interaction: {
+                                intersect: false,
+                                mode: 'index',
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        // remove decimals in y axis
+                                        precision: 0
+                                    }
+                                },
+                                x: {
+                                    suggestedMin: new Date().toLocaleTimeString('en', {
+                                        timeStyle: 'short',
+                                        hour12: false,
+                                        timeZone: 'UTC'
+                                    })
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Playercount',
+                                    font: {
+                                        size: 24
+                                    }
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            }
+
+                        }
+                    });
+
+                    playercountTimeout = setTimeout(playercountGraph, 60000);
+                }))
+            }
+
+            cpuGraph();
+            memoryGraph();
+            playercountGraph();
         });
 
         tr.append(td);
@@ -37,19 +325,23 @@ $('#addMonitorForm').submit((e) => {
     e.preventDefault();
 
     const monitorName = $('#minecraftMonitorName').val();
+    // hide the submit button, lock the ip address and name field
     $('#addMonitorFormSubmit').attr('hidden', 'true');
     $('#ipAddress').attr('disabled', 'true');
     $('#minecraftMonitorName').attr('disabled', 'true');
 
+    // remove any of the success messages if they exist
     $('.alert-secondary').remove();
     $('#receivedAnalytics').remove();
     $('#alreadyExists').remove();
     $('#downloadMessage').remove();
 
+    // add the download message
     const downloadMessage = document.createElement('p');
     downloadMessage.textContent = 'Download and install the monitoring plugin from here, and install it into your plugins folder. Once installed, reboot your server. We will detect once we have received analytics below.';
     downloadMessage.id = "downloadMessage";
 
+    // add the alert spinner while checking for analytics from monitor
     const analyticsChecker = document.createElement('div');
     analyticsChecker.className = "alert alert-secondary text-center";
     analyticsChecker.id = 'analyticsChecker';
@@ -58,6 +350,7 @@ $('#addMonitorForm').submit((e) => {
     const analyticsCheckerMessage = document.createElement('p');
     analyticsCheckerMessage.textContent = 'Waiting for analytics...';
 
+    // append the alert spinner
     $('.mb-3.ip-address').append(downloadMessage, analyticsChecker);
     $('.alert-secondary').append(analyticsCheckerSpinner, analyticsCheckerMessage);
 
@@ -75,6 +368,7 @@ $('#addMonitorForm').submit((e) => {
         return null;
     }
 
+    // check api every 2.5 seconds if analytics has been received for the entered ip address
     const interval = setInterval(() => {
         $.post('http://192.168.1.251/api/create', {ip: $('#ipAddress').val(), email: getCookie('email'), name: $('#minecraftMonitorName').val()}, (data) => {
             if (data === 'exists') {
@@ -117,12 +411,14 @@ $('#addMonitorForm').submit((e) => {
 
 });
 
+// ask user if they're sure they want to leave when pressing the back arrow with the create monitor modal open
 $('#addMonitorModal').on('show.bs.modal', () => {
     window.onbeforeunload = () => {
         return true;
     }
 });
 
+// reset entered information in the add monitor modal when closed
 $('#addMonitorModal').on('hidden.bs.modal', () => {
     $('#minecraftMonitorName').val('');
     $('#ipAddress').val('');
@@ -134,18 +430,6 @@ $('#addMonitorModal').on('hidden.bs.modal', () => {
     $('.alert-secondary').remove();
     $('#receivedAnalytics').remove();
     $('#alreadyExists').remove();
-
-    // if ($('#analyticsChecker').length) {
-    //     $('.alert-secondary').remove();
-    // }
-    //
-    // if ($('#receivedAnalytics').length) {
-    //     $('.alert-success').remove();
-    // }
-    //
-    // if ($('#alreadyExists').length) {
-    //     $('#alreadyExists').remove();
-    // }
 
     if (typeof interval !== 'undefined') {
         clearInterval(interval);
