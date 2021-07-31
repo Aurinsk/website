@@ -43,25 +43,32 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             $(`.${escapedRowName} .modal-header`).append(closeButton);
             $(`.${escapedRowName}`).attr('id', escapedRowName);
 
-            // set modal body to hidden until reordering of graphs is complete
-            //$(`.${escapedRowName}`).attr('hidden', 'true');
+            // create divs to order graphs
+            const cpuContainer = document.createElement('div');
+            cpuContainer.setAttribute('id', 'cpuContainer');
+            const memoryContainer = document.createElement('div');
+            memoryContainer.setAttribute('id', 'memoryContainer');
+            const playercountContainer = document.createElement('div');
+            playercountContainer.setAttribute('id', 'playercountContainer');
+
+            $(`.${escapedRowName} .modal-body`).append(cpuContainer, memoryContainer, playercountContainer);
 
             function cpuGraph() {
                 $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/1h`, ((data) => {
 
                     // if the canvas already exists, remove it, and recreate it
                     // used for refreshing the graphs every minute
-                    if ($(`canvas#cpu`).length) {
-                        $(`canvas#cpu`).remove();
+                    if ($('canvas#cpu').length) {
+                        $('canvas#cpu').remove();
                         const canvas = document.createElement('canvas');
                         canvas.setAttribute('id', 'cpu');
                         canvas.className = escapedRowName;
-                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                        $('#cpuContainer').append(canvas);
                     } else {
                         const canvas = document.createElement('canvas');
                         canvas.setAttribute('id', 'cpu');
                         canvas.className = escapedRowName;
-                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                        $('#cpuContainer').append(canvas);
                     }
 
                     // get current time in hh:mm
@@ -205,17 +212,17 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             function memoryGraph() {
                 $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/1h`, ((data) => {
 
-                    if ($(`canvas#memory`).length) {
-                        $(`canvas#memory`).remove();
+                    if ($('canvas#memory').length) {
+                        $('canvas#memory').remove();
                         const canvas = document.createElement('canvas');
                         canvas.setAttribute('id', 'memory');
                         canvas.className = escapedRowName;
-                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                        $('#memoryContainer').append(canvas);
                     } else {
                         const canvas = document.createElement('canvas');
                         canvas.setAttribute('id', 'memory');
                         canvas.className = escapedRowName;
-                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                        $('#memoryContainer').append(canvas);
                     }
 
                     // get current time in hh:mm
@@ -352,17 +359,17 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             function playercountGraph() {
                 $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/player_count/1h`, ((data) => {
 
-                    if ($(`canvas#playercount`).length) {
-                        $(`canvas#playercount`).remove();
+                    if ($('canvas#playercount').length) {
+                        $('canvas#playercount').remove();
                         const canvas = document.createElement('canvas');
                         canvas.setAttribute('id', 'playercount');
                         canvas.className = escapedRowName;
-                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                        $('#playercountContainer').append(canvas);
                     } else {
                         const canvas = document.createElement('canvas');
                         canvas.setAttribute('id', 'playercount');
                         canvas.className = escapedRowName;
-                        $(`.${escapedRowName} .modal-body`).append(canvas);
+                        $('#playercountContainer').append(canvas);
                     }
 
                     // get current time in hh:mm
