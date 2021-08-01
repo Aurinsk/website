@@ -43,6 +43,38 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             $(`.${escapedRowName} .modal-header`).append(closeButton);
             $(`.${escapedRowName}`).attr('id', escapedRowName);
 
+            // create refresh button and click handler
+
+            const refreshMonitorButton = document.createElement('button');
+            refreshMonitorButton.className = 'btn btn-primary refresh-monitor';
+            refreshMonitorButton.textContent = 'Refresh Monitors';
+
+            $(`.${escapedRowName} .modal-body`).append(refreshMonitorButton);
+
+            $('.refresh-monitor').click(() => {
+                $('.refresh-monitor').attr('disabled', 'true');
+
+                // remove existing graphs
+                $('canvas#cpu').remove();
+                $('canvas#memory').remove();
+                $('canvas#playercount').remove();
+
+                // clear timeouts of existing graphs
+                clearTimeout(cpuTimeout);
+                clearTimeout(memoryTimeout);
+                clearTimeout(playercountTimeout);
+
+                // create new graphs
+                cpuGraph();
+                memoryGraph();
+                playercountGraph();
+
+                // remove disabled button attribute
+                $('span.spinner-border').remove();
+                $('.refresh-monitor').removeAttr('disabled');
+
+            })
+
             // create divs to order graphs
             const cpuContainer = document.createElement('div');
             cpuContainer.setAttribute('id', 'cpuContainer');
