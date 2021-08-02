@@ -2,6 +2,7 @@ let cpuTimeout;
 let memoryTimeout;
 let playercountTimeout;
 let reorderGraphsTimeout;
+let checkForAnalyticsTimeout;
 
 // get cookie by name
 function getCookie(name) {
@@ -21,9 +22,9 @@ function getCookie(name) {
 // pass authorization header on every request
 $.ajaxSetup({
     beforeSend: (xhr) => {
-        xhr.setRequestHeader('Authorization', getCookie('user'));
+        xhr.setRequestHeader('Authorization', `Bearer ${getCookie('user')}`);
     }
-})
+});
 
 $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
     // loop through all of the rows returned from api
@@ -547,12 +548,6 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                 }))
             }
 
-            // needed to reorder the graphs to be cpu -> memory -> playercount, top to bottom
-            // $.when(cpuGraph(), memoryGraph(), playercountGraph()).done(() => {
-            //     $('canvas#cpu').insertBefore($('canvas#memory'));
-            //     $('canvas#playercount').appendTo('.modal-body');
-            // })
-
             cpuGraph();
             memoryGraph();
             playercountGraph();
@@ -599,8 +594,8 @@ $('#addMonitorForm').submit((e) => {
     $('.alert-secondary').append(analyticsCheckerSpinner, analyticsCheckerMessage);
 
     // check api every 2.5 seconds if analytics has been received for the entered ip address
-    const interval = setInterval(() => {
-        $.post('http://192.168.1.251/api/create', {ip: $('#ipAddress').val(), email: getCookie('email'), name: $('#minecraftMonitorName').val()}, (data) => {
+    function checkForAnalytics() {
+        $.post('http://192.168.1.251:3000/api/create', {ip: $('#ipAddress').val(), email: getCookie('email'), name: $('#minecraftMonitorName').val()}, (data) => {
             if (data === 'exists') {
                 const alreadyExists = document.createElement('div');
                 alreadyExists.className = 'alert alert-danger';
@@ -614,7 +609,8 @@ $('#addMonitorForm').submit((e) => {
                 $('#ipAddress').removeAttr('disabled');
                 $('#addMonitorFormSubmit').removeAttr('hidden');
 
-                clearInterval(interval);
+                clearTimeout(checkForAnalyticsTimeout);
+                return;
             }
 
             if (data === 'true') {
@@ -634,10 +630,15 @@ $('#addMonitorForm').submit((e) => {
                 $('.mb-3.ip-address').append(receivedAnalytics, viewMonitor);
                 $('.alert-success').append(analyticsReceivedCheck);
 
-                clearInterval(interval);
+                clearTimeout(checkForAnalyticsTimeout);
+                return;
             }
+
+            checkForAnalyticsTimeout = setTimeout(checkForAnalytics, 2500);
         })
-    }, 2500);
+    }
+
+    checkForAnalytics();
 
 });
 
@@ -661,9 +662,7 @@ $('#addMonitorModal').on('hidden.bs.modal', () => {
     $('#receivedAnalytics').remove();
     $('#alreadyExists').remove();
 
-    if (typeof interval !== 'undefined') {
-        clearInterval(interval);
-    }
+    clearTimeout(checkForAnalyticsTimeout);
 
     window.onbeforeunload = null;
 });
