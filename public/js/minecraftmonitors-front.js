@@ -3,6 +3,28 @@ let memoryTimeout;
 let playercountTimeout;
 let reorderGraphsTimeout;
 
+// get cookie by name
+function getCookie(name) {
+    let cookieArr = document.cookie.split(";");
+
+    for (let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+
+        if(name == cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+
+    return null;
+}
+
+// pass authorization header on every request
+$.ajaxSetup({
+    beforeSend: (xhr) => {
+        xhr.setRequestHeader('Authorization', getCookie('user'));
+    }
+})
+
 $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
     // loop through all of the rows returned from api
     for (const row of data) {
@@ -575,20 +597,6 @@ $('#addMonitorForm').submit((e) => {
     // append the alert spinner
     $('.mb-3.ip-address').append(downloadMessage, analyticsChecker);
     $('.alert-secondary').append(analyticsCheckerSpinner, analyticsCheckerMessage);
-
-    function getCookie(name) {
-        let cookieArr = document.cookie.split(";");
-
-        for (let i = 0; i < cookieArr.length; i++) {
-            let cookiePair = cookieArr[i].split("=");
-
-            if(name == cookiePair[0].trim()) {
-                return decodeURIComponent(cookiePair[1]);
-            }
-        }
-
-        return null;
-    }
 
     // check api every 2.5 seconds if analytics has been received for the entered ip address
     const interval = setInterval(() => {
