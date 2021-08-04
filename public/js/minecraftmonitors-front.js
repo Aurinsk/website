@@ -3,6 +3,7 @@ let memoryTimeout;
 let playercountTimeout;
 let reorderGraphsTimeout;
 let checkForAnalyticsTimeout;
+let statusAlertTimeout;
 
 // get cookie by name
 function getCookie(name) {
@@ -55,6 +56,7 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                         clearTimeout(cpuTimeout);
                         clearTimeout(memoryTimeout);
                         clearTimeout(playercountTimeout);
+                        clearTimeout(statusAlertTimeout);
                     }
                 }
             });
@@ -91,12 +93,40 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
                 cpuGraph();
                 memoryGraph();
                 playercountGraph();
+                statusAlert();
 
                 // remove disabled button attribute
                 $('span.spinner-border').remove();
                 $('.refresh-monitor').removeAttr('disabled');
 
-            })
+            });
+
+            // create status alert of server
+
+            function statusAlert() {
+                $.get(`http://192.168.1.251:3000/api/query/status/1ef0d89e-7ee1-4201-b683-646f04daef34`, ((status) => {
+                    status = status[0].status;
+
+                    if ($('#status').length) {
+                        $('#status').remove();
+                    }
+
+                    const alert = document.createElement('div');
+                    alert.setAttribute('id', 'status');
+
+                    if (status === 'up') {
+                        alert.className = 'alert alert-success';
+                        alert.textContent = `${row.name} is UP`;
+                    } else {
+                        alert.className = 'alert alert-danger';
+                        alert.textContent = `${row.name} is DOWN`;
+                    }
+
+                    $(`.${escapedRowName} .modal-body`).prepend(alert);
+
+                    statusAlertTimeout = setTimeout(statusAlert, 60000);
+                }))
+            }
 
             // create divs to order graphs
             const cpuContainer = document.createElement('div');
@@ -551,6 +581,7 @@ $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
             cpuGraph();
             memoryGraph();
             playercountGraph();
+            statusAlert();
 
         });
 
