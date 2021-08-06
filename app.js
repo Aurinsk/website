@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const flash = require('connect-flash');
 const session = require('express-session');
+const favicon = require('serve-favicon');
 
 const indexRouter = require('./routes/index');
 const loginRouter = require('./routes/login');
@@ -15,6 +16,9 @@ const reportRouter = require('./routes/report');
 const waitingListRouter = require('./routes/waitinglist');
 
 const app = express();
+
+// favicon
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
