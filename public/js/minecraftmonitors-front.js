@@ -33,7 +33,7 @@ $('#refreshMonitors').click(() => {
 });
 
 function mainTable() {
-    $.get('http://192.168.1.251:3000/api/query/hwgilbert16@gmail.com', ((data) => {
+    $.get(`http://192.168.1.251:3000/api/query/${getCookie('email')}`, ((data) => {
         // check if any rows already exist, if they do, delete them
         if ($('.monitors').length) {
             $('.monitors').remove();
