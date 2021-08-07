@@ -1,6 +1,7 @@
 let cpuTimeout;
 let memoryTimeout;
 let playercountTimeout;
+let tpsTimeout;
 let checkForAnalyticsTimeout;
 let statusAlertTimeout;
 let mainTableTimeout;
@@ -28,7 +29,6 @@ $.ajaxSetup({
 });
 
 $('#refreshMonitors').click(() => {
-    console.log('refresh');
     mainTable();
 });
 
@@ -37,16 +37,17 @@ function mainTable() {
         // check if any rows already exist, if they do, delete them
         if ($('.monitors').length) {
             $('.monitors').remove();
+            mainTableTimeout = null;
         }
 
         // loop through all of the rows returned from api
         for (const row of data) {
+            const escapedRowName = row.name.replace(/\s+/g, '-').toLowerCase();
 
             const tr = document.createElement('tr');
-            tr.className = 'monitors';
+            tr.className = `monitors ${escapedRowName}`;
 
             const name = document.createElement('td');
-            const escapedRowName = row.name.replace(/\s+/g, '-').toLowerCase();
             name.textContent = row.name;
 
             const status = document.createElement('td');
@@ -127,7 +128,7 @@ function mainTable() {
                 // create status alert of server
 
                 function statusAlert() {
-                    $.get(`http://192.168.1.251:3000/api/query/status/1ef0d89e-7ee1-4201-b683-646f04daef34`, ((status) => {
+                    $.get(`http://192.168.1.251:3000/api/query/status/${row.uuid}`, ((status) => {
                         status = status[0].status;
 
                         if ($('#status').length) {
@@ -154,12 +155,41 @@ function mainTable() {
                 // create divs to order graphs
                 const cpuContainer = document.createElement('div');
                 cpuContainer.setAttribute('id', 'cpuContainer');
+
                 const memoryContainer = document.createElement('div');
                 memoryContainer.setAttribute('id', 'memoryContainer');
+
                 const playercountContainer = document.createElement('div');
                 playercountContainer.setAttribute('id', 'playercountContainer');
 
-                $(`.${escapedRowName} .modal-body`).append(cpuContainer, memoryContainer, playercountContainer);
+                const tpsContainer = document.createElement('div');
+                tpsContainer.setAttribute('id', 'tpsContainer');
+
+                const deleteButtonContainer = document.createElement('div');
+                deleteButtonContainer.setAttribute('id', 'deleteButtonContainer');
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-danger';
+                deleteButton.textContent = 'Delete Monitor';
+                deleteButtonContainer.append(deleteButton);
+
+                deleteButton.addEventListener('click', () => {
+                    $(`.bootbox.${escapedRowName}`).modal('hide');
+                    closeButton: false,
+                    bootbox.confirm({
+                        message: 'Are you sure you want to permanently delete this monitor and its history?',
+                        size: 'small',
+                        closeButton: false,
+                        callback: (result) => {
+                            if (result) {
+                                $(`.monitors.${escapedRowName}`).remove();
+
+                                $.post(`http://192.168.1.251:3000/api/delete/monitor/${row.uuid}`);
+                            }
+                        }
+                    })
+                })
+
+                $(`.${escapedRowName} .modal-body`).append(cpuContainer, memoryContainer, playercountContainer, tpsContainer, deleteButtonContainer);
 
                 function cpuGraph() {
                     $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/1h`, ((data) => {
@@ -601,9 +631,148 @@ function mainTable() {
                     }))
                 }
 
+                function tpsGraph() {
+                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/tps/1h`, ((data) => {
+
+                        if ($('canvas#tps').length) {
+                            $('canvas#tps').remove();
+                            const canvas = document.createElement('canvas');
+                            canvas.setAttribute('id', 'tps');
+                            canvas.className = escapedRowName;
+                            $('#tpsContainer').append(canvas);
+                        } else {
+                            const canvas = document.createElement('canvas');
+                            canvas.setAttribute('id', 'tps');
+                            canvas.className = escapedRowName;
+                            $('#tpsContainer').append(canvas);
+                        }
+
+                        // get current time in hh:mm
+                        let currentTime = new Date().toLocaleTimeString('en', {
+                            timeStyle: 'short',
+                            hour12: false,
+                            timeZone: 'UTC'
+                        })
+
+                        // get the most recent time by analytics
+                        let recentAnalyticsTime = new Date(data[1][data[1].length - 1]).toLocaleTimeString('en', {
+                            timeStyle: 'short',
+                            hour12: false,
+                            timeZone: 'UTC'
+                        });
+
+                        // add null to the data[1] array for any empty values
+                        if (currentTime !== recentAnalyticsTime) {
+                            const dateTimeNow = new Date();
+                            const dateAnalyticsTime = new Date(data[1][data[1].length - 1]);
+
+                            const minutesDifference = Math.floor((dateTimeNow.getTime() - dateAnalyticsTime.getTime()) / 1000 / 60);
+
+                            for (let i = 1; i <= minutesDifference; i++) {
+                                //data[1].push(dateTimeNow.setMinutes(dateTimeNow.getMinutes() + 1));
+                                dateAnalyticsTime.setMinutes(dateAnalyticsTime.getMinutes() + 1);
+                                data[1].push(dateAnalyticsTime.toISOString());
+                                data[0].push(null);
+                            }
+                        }
+
+                        // iterate over data[1] to check if the difference between any two values is > 1 minute
+                        for (let i = 0; i < data[1].length - 1; i++) {
+                            let time1 = new Date(data[1][i]);
+                            time1.setSeconds(0, 0);
+                            let time2 = new Date(data[1][i + 1]);
+                            time2.setSeconds(0, 0);
+
+                            const position = i;
+
+                            let correctTime2 = new Date(data[1][i]);
+                            correctTime2.setMinutes(time1.getMinutes() + 1);
+                            correctTime2.setSeconds(0, 0);
+
+                            // need to check if time2 does not equal time1 + 1 minute (correctTime2)
+                            // need to check if the second value does not equal the first time + 1 minute
+                            if (time2.toISOString() !== correctTime2.toISOString()) {
+                                const minutesDifference = Math.floor((time2.getTime() - time1.getTime()) / 1000 / 60);
+
+                                for (let i = 1; i <= minutesDifference; i++) {
+                                    time1.setMinutes(time1.getMinutes() + 1);
+                                    if (time1.toISOString() === time2.toISOString()) {
+                                        break;
+                                    }
+                                    data[1].splice(position + i, 0, time1.toISOString());
+                                    data[0].splice(position + i, 0, null);
+                                }
+                            }
+                        }
+
+                        for (let i = 0; i < data[1].length; i++) {
+                            data[1][i] = new Date(data[1][i]).toLocaleTimeString('en', {
+                                timeStyle: 'short',
+                                hour12: false,
+                                timeZone: 'UTC'
+                            });
+                        }
+
+                        console.log(data[0]);
+                        const chart = new Chart($('canvas#tps'), {
+                            type: 'line',
+                            data: {
+                                labels: data[1],
+                                datasets: [{
+                                    label: 'TPS',
+                                    backgroundColor: 'rgb(65, 255, 111, 0.1)',
+                                    borderColor: 'rgb(65, 255, 111)',
+                                    data: data[0],
+                                    pointRadius: 1,
+                                    fill: true,
+                                    spanGaps: false
+                                }]
+                            },
+                            options: {
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index',
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            // remove decimals in y axis
+                                            precision: 0
+                                        }
+                                    },
+                                    x: {
+                                        suggestedMin: new Date().toLocaleTimeString('en', {
+                                            timeStyle: 'short',
+                                            hour12: false,
+                                            timeZone: 'UTC'
+                                        })
+                                    }
+                                },
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: 'TPS',
+                                        font: {
+                                            size: 24
+                                        }
+                                    },
+                                    legend: {
+                                        display: false
+                                    }
+                                }
+
+                            }
+                        });
+
+                        tpsTimeout = setTimeout(tpsGraph, 60000);
+                    }))
+                }
+
                 cpuGraph();
                 memoryGraph();
                 playercountGraph();
+                tpsGraph();
                 statusAlert();
 
             });
@@ -684,6 +853,8 @@ $('#addMonitorForm').submit((e) => {
                 viewMonitor.className = 'btn btn-primary';
                 viewMonitor.textContent = 'View your Monitors';
                 viewMonitor.setAttribute('data-bs-dismiss', 'modal');
+
+                mainTable();
 
                 $('.mb-3.ip-address').append(receivedAnalytics, viewMonitor);
                 $('.alert-success').append(analyticsReceivedCheck);
