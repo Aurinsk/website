@@ -2,11 +2,22 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  const userCookie = req.cookies.user;
+  const data = {
+    user: req.cookies.user
+  };
+
   if (req.flash('invalid').length > 0) {
-    res.render('index', {invalid: true, user: userCookie});
+    data.invalid = true;
+  }
+
+  if (req.flash('verified').length > 0) {
+    data.verified = true;
+  }
+
+  if (req.flash('invalid').length > 0) {
+    res.render('index', data);
   } else {
-    res.render('index', {user: userCookie});
+    res.render('index', data);
   }
 });
 

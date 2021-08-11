@@ -67,7 +67,7 @@ function mainTable() {
                 bootbox.dialog({
                     title: row.name,
                     closeButton: false,
-                    message: 'Time is shown in UTC',
+                    message: 'Time is shown in UTC from the past 3 hours',
                     size: 'large',
                     onEscape: true,
                     backdrop: true,
@@ -192,7 +192,7 @@ function mainTable() {
                 $(`.${escapedRowName} .modal-body`).append(cpuContainer, memoryContainer, playercountContainer, tpsContainer, deleteButtonContainer);
 
                 function cpuGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/1h`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/3h`, ((data) => {
 
                         // if the canvas already exists, remove it, and recreate it
                         // used for refreshing the graphs every minute
@@ -348,7 +348,7 @@ function mainTable() {
                 }
 
                 function memoryGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/1h`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/3h`, ((data) => {
 
                         if ($('canvas#memory').length) {
                             $('canvas#memory').remove();
@@ -495,7 +495,7 @@ function mainTable() {
                 }
 
                 function playercountGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/player_count/1h`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/player_count/3h`, ((data) => {
 
                         if ($('canvas#playercount').length) {
                             $('canvas#playercount').remove();
@@ -632,7 +632,7 @@ function mainTable() {
                 }
 
                 function tpsGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/tps/1h`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/tps/3h`, ((data) => {
 
                         if ($('canvas#tps').length) {
                             $('canvas#tps').remove();
@@ -713,7 +713,6 @@ function mainTable() {
                             });
                         }
 
-                        console.log(data[0]);
                         const chart = new Chart($('canvas#tps'), {
                             type: 'line',
                             data: {
