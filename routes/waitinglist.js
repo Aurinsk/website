@@ -4,10 +4,23 @@ const pool = require("../utils/db.js");
 const SqlString = require('sqlstring');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const fetch = require('isomorphic-fetch');
 
 router.post('/', async (req, res) => {
     const conn = await pool.getConnection();
     const email = req.body.email;
+    const token = req.body.token
+
+    const reCaptchaUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${token}`;
+    let googleResponse = await fetch(reCaptchaUrl, {
+        method: 'POST'
+    })
+    googleResponse = await googleResponse.json();
+
+    if (googleResponse.score < 0.6) {
+        res.send('recaptcha_error').end();
+        return;
+    }
 
     const checkConfirmedQuery = SqlString.format('SELECT email FROM waiting_list WHERE email=?', [email]);
     const checkConfirmedResponse = await conn.query(checkConfirmedQuery);
@@ -16,7 +29,7 @@ router.post('/', async (req, res) => {
     const checkUnconfirmedResponse = await conn.query(checkUnconfirmedQuery);
 
     if (checkConfirmedResponse[0] || checkUnconfirmedResponse[0]) {
-        res.status(200).end();
+        res.send('exists').end();
         return;
     }
 
@@ -59,7 +72,7 @@ router.post('/', async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    res.status(201).end();
+    res.send('success').end();
 });
 
 router.get('/confirm/:verificationCode', async (req, res) => {

@@ -5,42 +5,56 @@ $(document).ready(() => {
 })
 
 if ($('.alert-danger').length) {
-    console.log('invalid');
     const loginModal = $('#loginModal');
     loginModal.removeClass('fade');
     loginModal.modal('show');
 }
 
-$('#waitingList').submit((e) => {
-    e.preventDefault();
+grecaptcha.ready(() => {
+    grecaptcha.execute('6LeG9PMbAAAAAE_RAFIQCVUJduCejHXA8C00wqXN', {action: 'demo'})
+        .then((token) => {
+            $('#waitingList').submit((e) => {
+                e.preventDefault();
 
-    const email = $('#waitingListEmail').val();
-    $.ajaxSetup({
-        beforeSend: () => {
-            if ($('#waitingListAlreadyExists').length) {
-                $('#waitingListAlreadyExists').remove();
-            }
-        },
-        statusCode: {
-            201: () => {
-                $('#joinWaitingList').remove();
-                const success = document.createElement('div');
-                success.className = 'alert alert-success';
-                success.textContent = "Thanks! Check your email to confirm your placement onto the waiting list."
-                success.id = 'waitingListSuccess';
-                $('#mainContent').append(success);
-                $('#waitingListEmail').attr('disabled', 'true');
-                $('.form-check-input').attr('disabled', 'true');
-            },
-            200: () => {
-                const error = document.createElement('div');
-                error.className = 'alert alert-danger';
-                error.textContent = 'You have already signed up for the waiting list';
-                error.id = 'waitingListAlreadyExists';
-                $('#mainContent').append(error);
-            }
-        }
-    });
+                //const email = $('#waitingListEmail').val();
+                const data = {
+                    email: $('#waitingListEmail').val(),
+                    token: token
+                }
 
-    $.post('/waitinglist', {email});
-});
+                $.ajax({
+                    url: '/waitinglist',
+                    method: 'POST',
+                    data: data,
+                    beforeSend: () => {
+                        if ($('#waitingListAlreadyExists').length) {
+                            $('#waitingListAlreadyExists').remove();
+                        }
+                    }
+                }).done((data) => {
+                    if (data === 'success') {
+                        $('#joinWaitingList').remove();
+                        const success = document.createElement('div');
+                        success.className = 'alert alert-success';
+                        success.textContent = "Thanks! Check your email to confirm your placement onto the waiting list."
+                        success.id = 'waitingListSuccess';
+                        $('#mainContent').append(success);
+                        $('#waitingListEmail').attr('disabled', 'true');
+                        $('.form-check-input').attr('disabled', 'true');
+                    } else if (data === 'exists') {
+                        const error = document.createElement('div');
+                        error.className = 'alert alert-danger';
+                        error.textContent = 'You have already signed up for the waiting list';
+                        error.id = 'waitingListAlreadyExists';
+                        $('#mainContent').append(error);
+                    } else {
+                        const error = document.createElement('div');
+                        error.className = 'alert alert-danger';
+                        error.textContent = 'reCaptcha failed, please try again';
+                        error.id = 'waitingListAlreadyExists';
+                        $('#mainContent').append(error);
+                    }
+                })
+            });
+        })
+})
