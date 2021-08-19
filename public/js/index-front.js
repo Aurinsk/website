@@ -4,10 +4,17 @@ $(document).ready(() => {
     }
 })
 
+$('#closeLoginButton').click(() => {
+    $('#loginModal').hide();
+    //$('body').removeClass('modal-open');
+    $('.modal-backdrop').remove();
+    console.log('test');
+})
+
 if ($('.alert-danger').length) {
-    const loginModal = $('#loginModal');
-    loginModal.removeClass('fade');
-    loginModal.modal('show');
+    //$('#loginModal').removeClass('fade');
+    $('#loginModal').addClass('fade');
+    $('#loginModal').modal('show');
 }
 
 grecaptcha.ready(() => {
@@ -16,7 +23,6 @@ grecaptcha.ready(() => {
             $('#waitingList').submit((e) => {
                 e.preventDefault();
 
-                //const email = $('#waitingListEmail').val();
                 const data = {
                     email: $('#waitingListEmail').val(),
                     token: token

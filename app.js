@@ -14,6 +14,7 @@ const logoutRouter = require('./routes/logout');
 const dashboardRouter = require('./routes/dashboard');
 const reportRouter = require('./routes/report');
 const waitingListRouter = require('./routes/waitinglist');
+const privacyPolicyRouter = require('./routes/privacypolicy');
 
 const app = express();
 
@@ -30,13 +31,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 //app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static('public'));
+app.use(express.static('public', {dotfiles: 'allow'}));
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false
 }));
 app.use(flash());
+
+if (process.env.NODE_ENV === 'PRODUCTION') {
+  app.use((req, res, next) => {
+    if (!req.secure && req.get('x-forwarded-proto') !== 'https' && process.env.NODE_ENV !== "DEVELOPMENT") {
+      return res.redirect('https://' + req.get('host') + req.url);
+    }
+    next();
+  })
+}
 
 // routes
 app.use('/', indexRouter);
@@ -46,6 +56,7 @@ app.use('/logout', logoutRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/report', reportRouter);
 app.use('/waitinglist', waitingListRouter);
+app.use('/privacypolicy', privacyPolicyRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
