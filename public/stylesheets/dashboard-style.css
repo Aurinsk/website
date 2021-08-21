@@ -16,3 +16,11 @@ footer {
 #alphaTestingWarning {
     top: 1.8rem;
 }
+
+.card-group {
+    margin-top: 2.5rem;
+}
+
+.card {
+    width: 25rem;
+}

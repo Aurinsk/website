@@ -4,23 +4,58 @@ block style
     link(rel="stylesheet" href="/stylesheets/dashboard-page-style.css")
 
 block content
-    .row.row-cols-1.row-cols-md-3.g-4
-        .status
-            .col
-                .card.h-100.bg-primary
-                    .card-header Header
-                    .card-body
-                        h5.card-title Primary card title
-                        p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.
-            .col
-                .card.h-100.bg-primary
-                    .card-header Header
-                    .card-body
-                        h5.card-title Primary card title
-                        p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.
-            .col
-                .card.h-100.bg-primary
-                    .card-header Header
-                    .card-body
-                        h5.card-title Primary card title
-                        p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.
+    .card-group
+        .col
+            .card.h-100.bg-success.text-white.mx-auto
+                .card-body
+                    h5.card-title.h1.up-monitors
+                    p.card-text.display-6 Up Monitor(s)
+        .col
+            .card.h-100.bg-danger.text-white.mx-auto
+                .card-body
+                    h5.card-title.h1.down-monitors
+                    p.card-text.display-6 Down Monitor(s)
+        .col
+            .card.h-100.bg-primary.mx-auto
+                .card-body
+                    h5.card-title.h1.avg-cpu
+                    p.card-text.display-6 Average CPU Usage
+                    p.card-text from last 10 minutes
+        .col
+            .card.h-100.bg-primary.mx-auto
+                .card-body
+                    h5.card-title.h1.avg-mem
+                    p.card-text.display-6 Average Memory Usage
+                    p.card-text from last 10 minutes
+
+block scripts
+    script(src="/js/dashboard-page.js")
+        //.col
+                    //    .card.h-100.bg-primary
+                    //        .card-header Header
+                    //        .card-body
+                    //            h5.card-title Primary card title
+                    //            p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.
+    //.row.row-cols-1.row-cols-md-3.g-4
+    //    .status
+    //        .col
+    //            .card.h-100.bg-success.text-white
+    //                .card-body
+    //                    h5.card-title 1
+    //                    p.card-text Up Monitors
+    //        .col
+    //            .card.h-100.bg-danger.text-white
+    //                .card-body
+    //                    h5.card-title Primary card title
+    //                    p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.
+    //        .col
+    //            .card.h-100.bg-primary
+    //                .card-body
+    //                    h5.card-title Primary card title
+    //                    p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.
+    //        //.col
+    //                    //    .card.h-100.bg-primary
+    //                    //        .card-header Header
+    //                    //        .card-body
+    //                    //            h5.card-title Primary card title
+    //                    //            p.card-text Some quick example text to build on the card title and make up the bulk of the card's content.

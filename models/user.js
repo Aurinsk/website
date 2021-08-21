@@ -97,7 +97,12 @@ module.exports = {
             return false;
         }
 
-        const user = jwt.verify(req.cookies.user, process.env.JWT_SECRET);
+        let user;
+        try {
+            user = jwt.verify(req.cookies.user, process.env.JWT_SECRET);
+        } catch (e) {
+            return false;
+        }
 
         if (user.email) {
             return true;

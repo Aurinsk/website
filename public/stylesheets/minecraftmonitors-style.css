@@ -19,7 +19,19 @@ table {
     margin-top: 1rem;
 }
 
-.monitor-button:hover {
+.monitors:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.refresh-monitor {
+    margin-top: 1rem;
+}
+
+.bi.bi-arrow-up.status {
+    color: green;
+}
+
+.bi.bi-arrow-down.status {
+    color: red;
 }
