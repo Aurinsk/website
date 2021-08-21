@@ -15,6 +15,7 @@ const dashboardRouter = require('./routes/dashboard');
 const reportRouter = require('./routes/report');
 const waitingListRouter = require('./routes/waitinglist');
 const privacyPolicyRouter = require('./routes/privacypolicy');
+const discordRouter = require('./routes/discord');
 
 const app = express();
 
@@ -26,11 +27,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 // middleware
-app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-//app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('public', {dotfiles: 'allow'}));
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -46,6 +45,8 @@ if (process.env.NODE_ENV === 'PRODUCTION') {
     }
     next();
   })
+} else {
+  app.use(logger('dev'));
 }
 
 // routes
@@ -57,6 +58,7 @@ app.use('/dashboard', dashboardRouter);
 app.use('/report', reportRouter);
 app.use('/waitinglist', waitingListRouter);
 app.use('/privacypolicy', privacyPolicyRouter);
+app.use('/discord', discordRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
