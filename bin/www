@@ -16,9 +16,9 @@ const fs = require('fs');
 
 if (process.env.NODE_ENV === 'PRODUCTION') {
   const httpsServer = https.createServer({
-    key: fs.readFileSync('/etc/letsencrypt/live/aurinsk.com/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/aurinsk.com/cert.pem'),
-    ca: fs.readFileSync('/etc/letsencrypt/live/aurinsk.com/chain.pem')
+    key: fs.readFileSync('/etc/letsencrypt/live/api.aurinsk.com/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/api.aurinsk.com/cert.pem'),
+    ca: fs.readFileSync('/etc/letsencrypt/live/api.aurinsk.com/chain.pem')
   }, app);
 
   httpsServer.listen('3050');

@@ -44,22 +44,18 @@ function mainTable() {
         for (const row of data) {
             const escapedRowName = row.name.replace(/\s+/g, '-').toLowerCase();
 
-            const tr = document.createElement('tr');
-            tr.className = `monitors ${escapedRowName}`;
+            const tr = helper.createSetAttributes('tr', {className: `monitors ${escapedRowName}`})
 
-            const name = document.createElement('td');
-            name.textContent = row.name;
+            const name = helper.createSetAttributes('td', {textContent: row.name});
 
-            const status = document.createElement('td');
-            status.textContent = row.status.charAt(0).toUpperCase() + row.status.slice(1);
+            const status = helper.createSetAttributes('td', {textContent: row.status.charAt(0).toUpperCase() + row.status.slice(1)})
             if (row.status === 'up') {
                 status.className = 'bi bi-arrow-up status';
             } else {
                 status.className = 'bi bi-arrow-down status';
             }
 
-            const lastChecked = document.createElement('td');
-            lastChecked.textContent = new Date(row.lastChecked).toString();
+            const lastChecked = helper.createSetAttributes('td', {textContent: new Date(row.lastChecked).toString()})
 
             // event listener on monitor name in graph
             tr.addEventListener('click', () => {
@@ -80,22 +76,19 @@ function mainTable() {
                             clearTimeout(memoryTimeout);
                             clearTimeout(playercountTimeout);
                             clearTimeout(statusAlertTimeout);
+                            clearTimeout(tpsTimeout);
                         }
                     }
                 });
 
                 // replace the close button in the modal since bootbox's one is broken
-                const closeButton = document.createElement('button');
-                closeButton.className = 'btn-close';
-                closeButton.setAttribute('data-bs-dismiss', 'modal');
+                const closeButton = helper.createSetAttributes('button', {className: 'btn-close', 'data-bs-dismiss': 'modal'});
                 $(`.${escapedRowName} .modal-header`).append(closeButton);
                 $(`.${escapedRowName}`).attr('id', escapedRowName);
 
                 // create refresh button and click handler
 
-                const refreshMonitorButton = document.createElement('button');
-                refreshMonitorButton.className = 'btn btn-primary refresh-monitor';
-                refreshMonitorButton.textContent = 'Refresh Monitors';
+                const refreshMonitorButton = helper.createSetAttributes('button', {className: 'btn btn-primary refresh-monitor', textContent: 'Refresh Monitor'});
 
                 $(`.${escapedRowName} .modal-body`).append(refreshMonitorButton);
 
@@ -112,6 +105,7 @@ function mainTable() {
                     clearTimeout(cpuTimeout);
                     clearTimeout(memoryTimeout);
                     clearTimeout(playercountTimeout);
+                    clearTimeout(tpsTimeout);
 
                     // create new graphs
                     cpuGraph();
@@ -135,15 +129,12 @@ function mainTable() {
                             $('#status').remove();
                         }
 
-                        const alert = document.createElement('div');
-                        alert.setAttribute('id', 'status');
+                        const alert = helper.createSetAttributes('div', {id: 'status'});
 
                         if (status === 'up') {
-                            alert.className = 'alert alert-success';
-                            alert.textContent = `${row.name} is UP`;
+                            helper.setAttributes(alert, {className: 'alert alert-success d-flex p-2 bd-highlight', textContent: `${row.name} is UP`});
                         } else {
-                            alert.className = 'alert alert-danger';
-                            alert.textContent = `${row.name} is DOWN`;
+                            helper.setAttributes(alert, {className: 'alert alert-danger', textContent: `${row.name} is DOWN`});
                         }
 
                         $(`.${escapedRowName} .modal-body`).prepend(alert);
@@ -152,24 +143,16 @@ function mainTable() {
                     }))
                 }
 
-                // create divs to order graphs
-                const cpuContainer = document.createElement('div');
-                cpuContainer.setAttribute('id', 'cpuContainer');
+                const cpuContainer = helper.createSetAttributes('div', {id: 'cpuContainer'});
 
-                const memoryContainer = document.createElement('div');
-                memoryContainer.setAttribute('id', 'memoryContainer');
+                const memoryContainer = helper.createSetAttributes('div', {id: 'memoryContainer'});
 
-                const playercountContainer = document.createElement('div');
-                playercountContainer.setAttribute('id', 'playercountContainer');
+                const playercountContainer = helper.createSetAttributes('div', {id: 'playercountContainer'});
 
-                const tpsContainer = document.createElement('div');
-                tpsContainer.setAttribute('id', 'tpsContainer');
+                const tpsContainer = helper.createSetAttributes('div', {id: 'tpsContainer'});
 
-                const deleteButtonContainer = document.createElement('div');
-                deleteButtonContainer.setAttribute('id', 'deleteButtonContainer');
-                const deleteButton = document.createElement('button');
-                deleteButton.className = 'btn btn-danger';
-                deleteButton.textContent = 'Delete Monitor';
+                const deleteButtonContainer = helper.createSetAttributes('div', {id: 'deleteButtonContainer'});
+                const deleteButton = helper.createSetAttributes('button', {className: 'btn btn-danger', textContent: 'Delete Monitor'});
                 deleteButtonContainer.append(deleteButton);
 
                 deleteButton.addEventListener('click', () => {
@@ -183,7 +166,12 @@ function mainTable() {
                             if (result) {
                                 $(`.monitors.${escapedRowName}`).remove();
 
-                                $.post(`http://192.168.1.251:3000/api/delete/monitor/${row.uuid}`);
+                                fetch(`http://192.168.1.251:3000/api/delete/monitor/${row.uuid}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Authorization': `Bearer ${getCookie('user')}`
+                                    }
+                                })
                             }
                         }
                     })
@@ -196,18 +184,14 @@ function mainTable() {
 
                         // if the canvas already exists, remove it, and recreate it
                         // used for refreshing the graphs every minute
+
+                        const canvas = helper.createSetAttributes('canvas', {id: 'cpu', className: escapedRowName});
+
                         if ($('canvas#cpu').length) {
                             $('canvas#cpu').remove();
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'cpu');
-                            canvas.className = escapedRowName;
-                            $('#cpuContainer').append(canvas);
-                        } else {
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'cpu');
-                            canvas.className = escapedRowName;
-                            $('#cpuContainer').append(canvas);
                         }
+
+                        $('#cpuContainer').append(canvas);
 
                         // get current time in hh:mm
                         let currentTime = new Date().toLocaleTimeString('en', {
@@ -350,18 +334,13 @@ function mainTable() {
                 function memoryGraph() {
                     $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/3h`, ((data) => {
 
+                        const canvas = helper.createSetAttributes('canvas', {id: 'memory', className: escapedRowName})
+
                         if ($('canvas#memory').length) {
                             $('canvas#memory').remove();
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'memory');
-                            canvas.className = escapedRowName;
-                            $('#memoryContainer').append(canvas);
-                        } else {
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'memory');
-                            canvas.className = escapedRowName;
-                            $('#memoryContainer').append(canvas);
                         }
+
+                        $('#memoryContainer').append(canvas);
 
                         // get current time in hh:mm
                         let currentTime = new Date().toLocaleTimeString('en', {
@@ -497,18 +476,13 @@ function mainTable() {
                 function playercountGraph() {
                     $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/player_count/3h`, ((data) => {
 
+                        const canvas = helper.createSetAttributes('canvas', {id: 'playercount', className: escapedRowName})
+
                         if ($('canvas#playercount').length) {
                             $('canvas#playercount').remove();
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'playercount');
-                            canvas.className = escapedRowName;
-                            $('#playercountContainer').append(canvas);
-                        } else {
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'playercount');
-                            canvas.className = escapedRowName;
-                            $('#playercountContainer').append(canvas);
                         }
+
+                        $('#playercountContainer').append(canvas);
 
                         // get current time in hh:mm
                         let currentTime = new Date().toLocaleTimeString('en', {
@@ -634,18 +608,14 @@ function mainTable() {
                 function tpsGraph() {
                     $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/tps/3h`, ((data) => {
 
+                        // const canvas = document.createElement('canvas');
+                        const canvas = helper.createSetAttributes('canvas', {id: 'tps', className: escapedRowName});
+
                         if ($('canvas#tps').length) {
                             $('canvas#tps').remove();
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'tps');
-                            canvas.className = escapedRowName;
-                            $('#tpsContainer').append(canvas);
-                        } else {
-                            const canvas = document.createElement('canvas');
-                            canvas.setAttribute('id', 'tps');
-                            canvas.className = escapedRowName;
-                            $('#tpsContainer').append(canvas);
                         }
+
+                        $('#tpsContainer').append(canvas);
 
                         // get current time in hh:mm
                         let currentTime = new Date().toLocaleTimeString('en', {
@@ -802,18 +772,15 @@ $('#addMonitorForm').submit((e) => {
     $('#downloadMessage').remove();
 
     // add the download message
-    const downloadMessage = document.createElement('p');
-    downloadMessage.textContent = 'Download and install the monitoring plugin from here, and install it into your plugins folder. Once installed, reboot your server. We will detect once we have received analytics below.';
-    downloadMessage.id = "downloadMessage";
+    const downloadMessage = helper.createSetAttributes('p', {
+        textContent: 'Download and install the monitoring plugin from here, and install it into your plugins folder. Once installed, reboot your server. We will detect once we have received analytics below.',
+        id: 'downloadMessage'
+    })
 
     // add the alert spinner while checking for analytics from monitor
-    const analyticsChecker = document.createElement('div');
-    analyticsChecker.className = "alert alert-secondary text-center";
-    analyticsChecker.id = 'analyticsChecker';
-    const analyticsCheckerSpinner = document.createElement('span');
-    analyticsCheckerSpinner.className = 'spinner-border';
-    const analyticsCheckerMessage = document.createElement('p');
-    analyticsCheckerMessage.textContent = 'Waiting for analytics...';
+    const analyticsChecker = helper.createSetAttributes('div', {className: 'alert alert-secondary text-center', id: 'analyticsChecker'});
+    const analyticsCheckerSpinner = helper.createSetAttributes('span', {className: 'spinner-border'});
+    const analyticsCheckerMessage = helper.createSetAttributes('p', {textContent: 'Waiting for analytics...'});
 
     // append the alert spinner
     $('.mb-3.ip-address').append(downloadMessage, analyticsChecker);
@@ -823,10 +790,7 @@ $('#addMonitorForm').submit((e) => {
     function checkForAnalytics() {
         $.post('http://192.168.1.251:3000/api/create', {ip: $('#ipAddress').val(), email: getCookie('email'), name: $('#minecraftMonitorName').val()}, (data) => {
             if (data === 'exists') {
-                const alreadyExists = document.createElement('div');
-                alreadyExists.className = 'alert alert-danger';
-                alreadyExists.id = 'alreadyExists';
-                alreadyExists.textContent = 'The monitor belonging to this IP address is already owned by you or somebody else';
+                const alreadyExists = helper.createSetAttributes('div', {className: 'alert alert-danger', id: 'alreadyExists', textContent: 'The monitor belonging to this IP address is already owned by you or somebody else'});
 
                 $('.mb-3.ip-address').append(alreadyExists);
                 $('#analyticsChecker').remove();
@@ -842,16 +806,10 @@ $('#addMonitorForm').submit((e) => {
             if (data === 'true') {
                 $('.alert-secondary').remove();
 
-                const receivedAnalytics = document.createElement('div');
-                receivedAnalytics.className = 'alert alert-success text-center';
-                receivedAnalytics.id = 'receivedAnalytics';
-                const analyticsReceivedCheck = document.createElement('span');
-                analyticsReceivedCheck.className = 'bi bi-check-lg';
+                const receivedAnalytics = helper.createSetAttributes('div', {className: 'alert alert-success text-center', id: 'receivedAnalytics'});
+                const analyticsReceivedCheck = helper.createSetAttributes('span', {className: 'bi bi-check-lg'});
 
-                const viewMonitor = document.createElement('button');
-                viewMonitor.className = 'btn btn-primary';
-                viewMonitor.textContent = 'View your Monitors';
-                viewMonitor.setAttribute('data-bs-dismiss', 'modal');
+                const viewMonitor = helper.createSetAttributes('button', {className: 'btn btn-primary', textContent: 'View your Monitors', 'data-bs-dismiss': 'modal'});
 
                 mainTable();
 
