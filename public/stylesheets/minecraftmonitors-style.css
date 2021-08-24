@@ -35,3 +35,16 @@ table {
 .bi.bi-arrow-down.status {
     color: red;
 }
+
+.time-selector {
+    margin-top: 1rem;
+    margin-left: 0.5rem;
+}
+
+#cpu {
+    margin-top: 1.5rem;
+}
+
+/*button {*/
+/*    cursor: none;*/
+/*}*/

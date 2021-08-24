@@ -55,7 +55,7 @@ function mainTable() {
                 status.className = 'bi bi-arrow-down status';
             }
 
-            const lastChecked = helper.createSetAttributes('td', {textContent: new Date(row.lastChecked).toString()})
+            const lastChecked = helper.createSetAttributes('td', {textContent: new Date(row.lastChecked).toUTCString()})
 
             // event listener on monitor name in graph
             tr.addEventListener('click', () => {
@@ -63,7 +63,7 @@ function mainTable() {
                 bootbox.dialog({
                     title: row.name,
                     closeButton: false,
-                    message: 'Time is shown in UTC from the past 3 hours',
+                    message: 'Times are shown in UTC 24-hour',
                     size: 'large',
                     onEscape: true,
                     backdrop: true,
@@ -81,6 +81,11 @@ function mainTable() {
                     }
                 });
 
+                // center utc 24-hour message
+                $(`.${escapedRowName} .bootbox-body`).addClass('text-center');
+                // center modal body
+                $(`.${escapedRowName} .modal-body`).addClass('text-center');
+
                 // replace the close button in the modal since bootbox's one is broken
                 const closeButton = helper.createSetAttributes('button', {className: 'btn-close', 'data-bs-dismiss': 'modal'});
                 $(`.${escapedRowName} .modal-header`).append(closeButton);
@@ -92,13 +97,14 @@ function mainTable() {
 
                 $(`.${escapedRowName} .modal-body`).append(refreshMonitorButton);
 
-                $('.refresh-monitor').click(() => {
+                function refreshGraphs() {
                     $('.refresh-monitor').attr('disabled', 'true');
 
                     // remove existing graphs
                     $('canvas#cpu').remove();
                     $('canvas#memory').remove();
                     $('canvas#playercount').remove();
+                    $('canvas#tps').remove();
                     $('#status').remove();
 
                     // clear timeouts of existing graphs
@@ -106,50 +112,94 @@ function mainTable() {
                     clearTimeout(memoryTimeout);
                     clearTimeout(playercountTimeout);
                     clearTimeout(tpsTimeout);
+                    clearTimeout(statusAlertTimeout);
+
+                    const selectedTime = $('.time-selector button.active').text();
 
                     // create new graphs
-                    cpuGraph();
-                    memoryGraph();
-                    playercountGraph();
-                    statusAlert();
+                    cpuGraph(selectedTime);
+                    memoryGraph(selectedTime);
+                    playercountGraph(selectedTime);
+                    tpsGraph(selectedTime);
+                    statusAlert(selectedTime);
 
                     // remove disabled button attribute
                     $('span.spinner-border').remove();
                     $('.refresh-monitor').removeAttr('disabled');
+                }
 
-                });
+                $('.refresh-monitor').click(refreshGraphs);
 
                 // create status alert of server
 
-                function statusAlert() {
-                    $.get(`http://192.168.1.251:3000/api/query/status/${row.uuid}`, ((status) => {
-                        status = status[0].status;
+                async function statusAlert() {
+                    if ($('.monitor-information').length) {
+                        $('.monitor-information').remove();
+                    }
 
-                        if ($('#status').length) {
-                            $('#status').remove();
-                        }
+                    const response = await Promise.all([
+                        fetch(`http://192.168.1.251:3000/api/query/recent/version/${row.uuid}`, {
+                            headers: {
+                                'Authorization': `Bearer ${getCookie('user')}`
+                            }
+                        }),
+                        fetch(`http://192.168.1.251:3000/api/query/recent/ip/${row.uuid}`, {
+                            headers: {
+                                'Authorization': `Bearer ${getCookie('user')}`
+                            }
+                        }),
+                        fetch(`http://192.168.1.251:3000/api/query/status/${row.uuid}`, {
+                            headers: {
+                                'Authorization': `Bearer ${getCookie('user')}`
+                            }
+                        })
+                    ]);
 
-                        const alert = helper.createSetAttributes('div', {id: 'status'});
+                    let data = await Promise.all(response.map(r => r.json()));
+                    data = data.flat();
 
-                        if (status === 'up') {
-                            helper.setAttributes(alert, {className: 'alert alert-success d-flex p-2 bd-highlight', textContent: `${row.name} is UP`});
-                        } else {
-                            helper.setAttributes(alert, {className: 'alert alert-danger', textContent: `${row.name} is DOWN`});
-                        }
+                    const flexContainer = helper.createSetAttributes('div', {className: 'd-flex justify-content-center monitor-information'});
 
-                        $(`.${escapedRowName} .modal-body`).prepend(alert);
+                    const versionContainer = helper.createSetAttributes('div', {className: 'p-2'});
+                    const ipContainer = helper.createSetAttributes('div', {className: 'p-2'});
+                    const statusContainer = helper.createSetAttributes('div', {className: 'p-2'});
+                    const lastCheckedContainer = helper.createSetAttributes('div', {className: 'p-2'});
 
-                        statusAlertTimeout = setTimeout(statusAlert, 60000);
-                    }))
+                    const versionTitle = helper.createSetAttributes('p', {textContent: 'Minecraft Version', className: 'fs-5'});
+                    const versionValue = helper.createSetAttributes('p', {textContent: data[0]});
+                    versionContainer.append(versionTitle, versionValue);
+
+                    const ipTitle = helper.createSetAttributes('p', {textContent: 'IP Address', className: 'fs-5'});
+                    const ipValue = helper.createSetAttributes('p', {textContent: data[1]});
+                    ipContainer.append(ipTitle, ipValue);
+
+                    const statusTitle = helper.createSetAttributes('p', {textContent: 'Status', className: 'fs-5'});
+                    const statusValue = document.createElement('p');
+                    if (data[2].status === 'up') {
+                        helper.setAttributes(statusValue, {className: 'bi bi-arrow-up status', textContent: 'Up'});
+                    } else {
+                        helper.setAttributes(statusValue, {className: 'bi bi-arrow-down status status', textContent: 'Down'});
+                    }
+                    statusContainer.append(statusTitle, statusValue);
+
+                    const lastCheckedTitle = helper.createSetAttributes('p', {textContent: 'Last Checked', className: 'fs-5'});
+                    //const lastCheckedValue = helper.createSetAttributes('p', {textContent: new Date(row.lastChecked).toString()});
+                    const lastCheckedValue = helper.createSetAttributes('p', {textContent: new Date(row.lastChecked).toUTCString()});
+                    //console.log(new Date(row.lastChecked).toUTCString());
+                    // textContent: new Date(row.lastChecked).toString()
+                    lastCheckedContainer.append(lastCheckedTitle, lastCheckedValue);
+
+                    flexContainer.append(versionContainer, ipContainer, statusContainer, lastCheckedContainer);
+
+                    $(`.${escapedRowName} .modal-body`).prepend(flexContainer);
+
+                    statusAlertTimeout = setTimeout(statusAlert, 60000);
                 }
 
-                const cpuContainer = helper.createSetAttributes('div', {id: 'cpuContainer'});
-
-                const memoryContainer = helper.createSetAttributes('div', {id: 'memoryContainer'});
-
-                const playercountContainer = helper.createSetAttributes('div', {id: 'playercountContainer'});
-
-                const tpsContainer = helper.createSetAttributes('div', {id: 'tpsContainer'});
+                const cpuContainer = helper.createSetAttributes('div', {id: 'cpuContainer', className: 'text-center'});
+                const memoryContainer = helper.createSetAttributes('div', {id: 'memoryContainer', className: 'text-center'});
+                const playercountContainer = helper.createSetAttributes('div', {id: 'playercountContainer', className: 'text-center'});
+                const tpsContainer = helper.createSetAttributes('div', {id: 'tpsContainer', className: 'text-center'});
 
                 const deleteButtonContainer = helper.createSetAttributes('div', {id: 'deleteButtonContainer'});
                 const deleteButton = helper.createSetAttributes('button', {className: 'btn btn-danger', textContent: 'Delete Monitor'});
@@ -158,29 +208,58 @@ function mainTable() {
                 deleteButton.addEventListener('click', () => {
                     $(`.bootbox.${escapedRowName}`).modal('hide');
                     closeButton: false,
-                    bootbox.confirm({
-                        message: 'Are you sure you want to permanently delete this monitor and its history?',
-                        size: 'small',
-                        closeButton: false,
-                        callback: (result) => {
-                            if (result) {
-                                $(`.monitors.${escapedRowName}`).remove();
+                        bootbox.confirm({
+                            message: 'Are you sure you want to permanently delete this monitor and its history?',
+                            size: 'small',
+                            closeButton: false,
+                            callback: (result) => {
+                                if (result) {
+                                    $(`.monitors.${escapedRowName}`).remove();
 
-                                fetch(`http://192.168.1.251:3000/api/delete/monitor/${row.uuid}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'Authorization': `Bearer ${getCookie('user')}`
-                                    }
-                                })
+                                    fetch(`http://192.168.1.251:3000/api/delete/monitor/${row.uuid}`, {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'Authorization': `Bearer ${getCookie('user')}`
+                                        }
+                                    })
+                                }
                             }
-                        }
-                    })
+                        })
                 })
+
+                const buttonGroup = helper.createSetAttributes('div', {className: 'btn-group time-selector', role: 'group'});
+                const threehour = helper.createSetAttributes('button', {className: 'btn btn-primary', textContent: '3h'});
+                const sixhour = helper.createSetAttributes('button', {className: 'btn btn-primary', textContent: '6h'});
+                const twelvehour = helper.createSetAttributes('button', {className: 'btn btn-primary', textContent: '12h'});
+                const twentyfourhour = helper.createSetAttributes('button', {className: 'btn btn-primary', textContent: '24h'});
+
+                buttonGroup.append(threehour, sixhour, twelvehour, twentyfourhour);
+
+                // [cpuContainer, memoryContainer, playercountContainer, tpsContainer].forEach(item => {
+                //     item.prepend(buttonGroup.cloneNode(true));
+                // })
+
+                $(`.${escapedRowName} .modal-body`).append(buttonGroup);
 
                 $(`.${escapedRowName} .modal-body`).append(cpuContainer, memoryContainer, playercountContainer, tpsContainer, deleteButtonContainer);
 
-                function cpuGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/3h`, ((data) => {
+                $('.time-selector button').first().addClass('active');
+
+                $('.time-selector button').each((i, obj) => {
+                    $(obj).click((e) => {
+                        const hours = e.target.textContent;
+
+                        $('.time-selector button').removeClass('active');
+                        $(e.target).addClass('active');
+
+                        refreshGraphs();
+                    });
+                })
+
+                const selectedTime = $('.time-selector button.active').text();
+
+                function cpuGraph(time) {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/cpu_usage/${time}`, ((data) => {
 
                         // if the canvas already exists, remove it, and recreate it
                         // used for refreshing the graphs every minute
@@ -327,12 +406,13 @@ function mainTable() {
                             }
                         });
 
-                        cpuTimeout = setTimeout(cpuGraph, 60000);
+                        const selectedTime = $('.time-selector button.active').text();
+                        cpuTimeout = setTimeout(cpuGraph, 60000, selectedTime);
                     }))
                 }
 
-                function memoryGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/3h`, ((data) => {
+                function memoryGraph(time) {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/memory_usage/${time}`, ((data) => {
 
                         const canvas = helper.createSetAttributes('canvas', {id: 'memory', className: escapedRowName})
 
@@ -469,12 +549,13 @@ function mainTable() {
                             }
                         });
 
-                        memoryTimeout = setTimeout(memoryGraph, 60000);
+                        const selectedTime = $('.time-selector button.active').text();
+                        memoryTimeout = setTimeout(memoryGraph, 60000, selectedTime);
                     }))
                 }
 
-                function playercountGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/player_count/3h`, ((data) => {
+                function playercountGraph(time) {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/player_count/${time}`, ((data) => {
 
                         const canvas = helper.createSetAttributes('canvas', {id: 'playercount', className: escapedRowName})
 
@@ -601,12 +682,13 @@ function mainTable() {
                             }
                         });
 
-                        playercountTimeout = setTimeout(playercountGraph, 60000);
+                        const selectedTime = $('.time-selector button.active').text();
+                        playercountTimeout = setTimeout(playercountGraph, 60000, selectedTime);
                     }))
                 }
 
-                function tpsGraph() {
-                    $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/tps/3h`, ((data) => {
+                function tpsGraph(time) {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/tps/${time}`, ((data) => {
 
                         // const canvas = document.createElement('canvas');
                         const canvas = helper.createSetAttributes('canvas', {id: 'tps', className: escapedRowName});
@@ -734,15 +816,16 @@ function mainTable() {
                             }
                         });
 
-                        tpsTimeout = setTimeout(tpsGraph, 60000);
+                        const selectedTime = $('.time-selector button.active').text();
+                        tpsTimeout = setTimeout(tpsGraph, 60000, selectedTime);
                     }))
                 }
 
-                cpuGraph();
-                memoryGraph();
-                playercountGraph();
-                tpsGraph();
-                statusAlert();
+                cpuGraph(selectedTime);
+                memoryGraph(selectedTime);
+                playercountGraph(selectedTime);
+                tpsGraph(selectedTime);
+                statusAlert(selectedTime);
 
             });
 
