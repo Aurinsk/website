@@ -55,4 +55,7 @@ jobs:
           echo 'SESSION_SECRET=$SESSION_SECRET' >> .env
           echo 'JWT_SECRET=$JWT_SECRET' >> .env
           echo 'RECAPTCHA_SECRET=$RECAPTCHA_SECRET' >> .env
+          pkill -f node
           forever start bin/www
+          sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3000
+          sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 3050
