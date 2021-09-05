@@ -33,7 +33,7 @@ $('#refreshMonitors').click(() => {
 });
 
 function mainTable() {
-    $.get(`http://192.168.1.251:3000/api/query/${getCookie('email')}`, ((data) => {
+    $.get(`http://192.168.1.251:3000/api/query/monitors/${getCookie('email')}`, ((data) => {
         // check if any rows already exist, if they do, delete them
         if ($('.monitors').length) {
             $('.monitors').remove();
@@ -64,7 +64,7 @@ function mainTable() {
                     title: row.name,
                     closeButton: false,
                     message: 'Times are shown in UTC 24-hour',
-                    size: 'large',
+                    size: 'extra-large',
                     onEscape: true,
                     backdrop: true,
                     className: escapedRowName,
@@ -138,7 +138,7 @@ function mainTable() {
                     }
 
                     const response = await Promise.all([
-                        fetch(`http://192.168.1.251:3000/api/query/recent/version/${row.uuid}`, {
+                        fetch(`http://192.168.1.251:3000/api/query/recent/minecraftVersion/${row.uuid}`, {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
@@ -152,6 +152,16 @@ function mainTable() {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
+                        }),
+                        fetch(`http://192.168.1.251:3000/api/query/recent/pluginVersion/${row.uuid}`, {
+                            headers: {
+                                'Authorization': `Bearer ${getCookie('user')}`
+                            }
+                        }),
+                        fetch(`http://192.168.1.251:3000/api/query/plugin-version`, {
+                            headers: {
+                                'Authorization': `Bearer ${getCookie('user')}`
+                            }
                         })
                     ]);
 
@@ -161,6 +171,7 @@ function mainTable() {
                     const flexContainer = helper.createSetAttributes('div', {className: 'd-flex justify-content-center monitor-information'});
 
                     const versionContainer = helper.createSetAttributes('div', {className: 'p-2'});
+                    const pluginVersionContainer = helper.createSetAttributes('div', {className: 'p-2'});
                     const ipContainer = helper.createSetAttributes('div', {className: 'p-2'});
                     const statusContainer = helper.createSetAttributes('div', {className: 'p-2'});
                     const lastCheckedContainer = helper.createSetAttributes('div', {className: 'p-2'});
@@ -182,6 +193,23 @@ function mainTable() {
                     }
                     statusContainer.append(statusTitle, statusValue);
 
+                    const pluginVersionTitle = helper.createSetAttributes('p', {textContent: 'Plugin Version', className: 'fs-5'});
+                    const pluginVersionValue = helper.createSetAttributes('p', {textContent: data[3]});
+                    pluginVersionContainer.append(pluginVersionTitle, pluginVersionValue);
+
+                    if (data[3] !== data[4]) {
+                        const exclamationMark = helper.createSetAttributes('i', {className: 'bi bi-exclamation-triangle'});
+                        pluginVersionValue.append(exclamationMark);
+
+                        if ($('.update-message').length) {
+                            $('.update-message').remove();
+                        }
+                        const updateMessage = helper.createSetAttributes('a', {textContent: 'Your plugin is out of date. Click here to download the latest version and update.', href: 'https://github.com/Aurinsk/website/releases/download/', className: 'update-message'});
+                        $(`.${escapedRowName} .modal-body`).prepend(updateMessage);
+                    }
+
+                    pluginVersionContainer.append(pluginVersionTitle, pluginVersionValue);
+
                     const lastCheckedTitle = helper.createSetAttributes('p', {textContent: 'Last Checked', className: 'fs-5'});
                     //const lastCheckedValue = helper.createSetAttributes('p', {textContent: new Date(row.lastChecked).toString()});
                     const lastCheckedValue = helper.createSetAttributes('p', {textContent: new Date(row.lastChecked).toUTCString()});
@@ -189,7 +217,7 @@ function mainTable() {
                     // textContent: new Date(row.lastChecked).toString()
                     lastCheckedContainer.append(lastCheckedTitle, lastCheckedValue);
 
-                    flexContainer.append(versionContainer, ipContainer, statusContainer, lastCheckedContainer);
+                    flexContainer.append(versionContainer, ipContainer, statusContainer, lastCheckedContainer, pluginVersionContainer);
 
                     $(`.${escapedRowName} .modal-body`).prepend(flexContainer);
 
@@ -259,7 +287,7 @@ function mainTable() {
                 const selectedTime = $('.time-selector button.active').text();
 
                 function cpuGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/cpu_usage/${time}`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/cpu/${time}`, ((data) => {
 
                         // if the canvas already exists, remove it, and recreate it
                         // used for refreshing the graphs every minute
@@ -412,7 +440,7 @@ function mainTable() {
                 }
 
                 function memoryGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/memory_usage/${time}`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/memory/${time}`, ((data) => {
 
                         const canvas = helper.createSetAttributes('canvas', {id: 'memory', className: escapedRowName})
 
@@ -555,7 +583,7 @@ function mainTable() {
                 }
 
                 function playercountGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/player_count/${time}`, ((data) => {
+                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/playercount/${time}`, ((data) => {
 
                         const canvas = helper.createSetAttributes('canvas', {id: 'playercount', className: escapedRowName})
 

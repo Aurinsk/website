@@ -45,6 +45,6 @@ table {
     margin-top: 1.5rem;
 }
 
-/*button {*/
-/*    cursor: none;*/
-/*}*/
+.bi-exclamation-triangle {
+    color: red;
+}

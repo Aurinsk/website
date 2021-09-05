@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
         return;
     }
 
-    res.render('dashboard');
+    res.render('dashboard', {buildVersion: req.app.get('buildVersion')});
 });
 
 router.get('/minecraftmonitors', (req, res) => {
@@ -17,7 +17,7 @@ router.get('/minecraftmonitors', (req, res) => {
         return;
     }
 
-    res.render('minecraftmonitors');
+    res.render('minecraftmonitors', {buildVersion: req.app.get('buildVersion')});
 });
 
 module.exports = router;

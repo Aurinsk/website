@@ -24,6 +24,7 @@ html
                         li.nav-item
                             a.nav-link.disabled(href='#' tabindex='-1' aria-disabled='true') Linux Monitors (Coming in Beta)
                     .d-flex
+                        span.navbar-text.fs-6.build-version Build Version: #{buildVersion}
                         a.btn.btn-primary(href="/logout" type='submit') Logout
 
         block content

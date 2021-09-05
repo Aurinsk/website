@@ -22,7 +22,7 @@ $.ajaxSetup({
 
 const email = getCookie('email');
 
-$.get(`http://192.168.1.251:3000/api/query/${email}`, (data) => {
+$.get(`http://192.168.1.251:3000/api/query/monitors/${email}`, (data) => {
 
     let upMonitors = 0;
     let downMonitors = 0;
