@@ -24,3 +24,11 @@ footer {
 .card {
     width: 25rem;
 }
+
+.col {
+    margin-top: 1rem;
+}
+
+.build-version {
+    padding-right: 1rem;
+}

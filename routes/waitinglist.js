@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
     
     Please click the link below to confirm your waiting list placement.
     
-    http://localhost:3000/waitinglist/confirm/${verificationCode}
+    https://aurinsk.com/waitinglist/confirm/${verificationCode}
     `;
     messageBody = messageBody
         .split("\n")
@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
         }
     });
     const mailOptions = {
-        from: 'Waiting List Confirmation <waitinglist@aurinsk.com>',
+        from: 'Waiting List <waitinglist@aurinsk.com>',
         to: email,
         subject: `Confirm your waiting list placement`,
         text: messageBody

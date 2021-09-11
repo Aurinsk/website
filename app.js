@@ -14,8 +14,9 @@ const logoutRouter = require('./routes/logout');
 const dashboardRouter = require('./routes/dashboard');
 const reportRouter = require('./routes/report');
 const waitingListRouter = require('./routes/waitinglist');
-const privacyPolicyRouter = require('./routes/privacypolicy');
 const discordRouter = require('./routes/discord');
+
+const pjson = require('./package.json');
 
 const app = express();
 
@@ -57,8 +58,10 @@ app.use('/logout', logoutRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/report', reportRouter);
 app.use('/waitinglist', waitingListRouter);
-app.use('/privacypolicy', privacyPolicyRouter);
 app.use('/discord', discordRouter);
+
+// save website version
+app.set('buildVersion', pjson.version);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

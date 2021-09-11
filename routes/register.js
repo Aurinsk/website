@@ -1,90 +1,91 @@
 const express = require('express');
 const router = express.Router();
 const user = require('../models/user');
+const pool = require("../utils/db.js");
 const handler = require('../utils/handler');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const SqlString = require('sqlstring');
 
-router.get('/', (req, res) => {
+router.get('/:registration_key', async (req, res) => {
+    const registrationKey = req.params.registration_key;
+
     if (user.checkLoggedIn(req, res)) {
-        res.redirect('/home');
+        res.redirect('/dashboard');
         return;
     }
 
-    res.render('register', {emailExists: req.flash('emailExists')});
-});
+    const query = SqlString.format('SELECT registration_key FROM registration_keys WHERE registration_key = ?', [registrationKey]);
+    const connection = await pool.getConnection();
+    const response = await connection.query(query);
 
-router.get('/:verification_code', (req, res) => {
-    const verification_code = req.params.verification_code;
-
-    if (verification_code.length < 32) {
+    if (!response[0] || response[0][Object.keys(response[0])[0]] !== registrationKey) {
         res.redirect('/');
         return;
     }
 
-    user.confirmUser(verification_code)
-        .then((r) => console.log(r))
-        .catch((e) => handler.handle('register'))
-
-    res.end();
+    res.render('register');
 });
 
-// router.get('/success', (req, res) => {
-//     res.render('registerSuccess');
-// });
-
 router.post('/', async (req, res) => {
-    // get username and password into own consts
-    const email = req.body.email;
     const password = req.body.password;
-    const verificationCode = crypto.randomBytes(16).toString('hex');
+    const registrationKey = req.body.registrationKey;
 
-    // values are escaped in user model
-    const userExists = await user.userExists(email);
+    const connection = await pool.getConnection();
 
-    // check if email already exists
-    if (userExists) {
-        req.flash('emailExists', true);
-        res.redirect('/register');
-        return;
-    }
+    const id = Math.floor(10000000 + Math.random() * 90000000);
 
-    const insertUnconfirmed = await user.insertUnconfirmed(email, password, verificationCode);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // error handling for insertUnconfirmed
-    if (!insertUnconfirmed) {
-        req.flash('error', true);
-        res.redirect('/register');
-        return;
-    }
+    const emailQuery = SqlString.format('SELECT email FROM registration_keys WHERE registration_key=?', [registrationKey]);
+    const emailResponse = await connection.query(emailQuery);
 
-    const messageBody = `
+    const email = emailResponse[0].email;
+
+    const insertQuery = SqlString.format('INSERT INTO users (email, password, id) VALUES (?, ?, ?)', [email, hashedPassword, id]);
+    const insertResponse = await connection.query(insertQuery);
+
+    const removeQuery = SqlString.format('DELETE FROM registration_keys WHERE registration_key = ?', [registrationKey]);
+    const removeResponse = await connection.query(removeQuery);
+
+    connection.close();
+
+    let messageBody = `
     Hello,
-
-    Please click the link below to verify your account.
-
-    http://localhost:3000/register/${verificationCode}
+                                
+    This is the confirmation message to inform you that you have successfully signed up for the Aurinsk alpha test.
+                                
+    Please make sure that you remember your selected password, as it will not be changeable during the alpha testing period.
     `;
+    messageBody = messageBody
+        .split("\n")
+        .map((line) => line.trim())
+        .join("\n");
 
-    const transporter = nodemailer.createTransport('smtp://hwgilbert16@gmail.com:tjzecesmgkxgpmsw@smtp.gmail.com');
-    const mailOptions = {
-        from: 'hwgilbert16@gmail.com',
-        to: email,
-        subject: 'Email Verification',
-        text: messageBody
-    };
-
-    transporter.sendMail(mailOptions, (err, data) => {
-        if (err) {
-            handler.handle(req, res, 'register');
-        } else {
-            console.log('Email sent successfully');
+    const transporter = nodemailer.createTransport({
+        host: "mail.aurinsk.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: "alerts@aurinsk.com",
+            pass: "7Y<}Q+LfdMV>ZjEb8c6m"
         }
     });
+    const mailOptions = {
+        from: 'Waiting List <waitinglist@aurinsk.com>',
+        to: email,
+        subject: `Successful alpha test signup`,
+        text: messageBody
+    }
 
+    transporter.sendMail(mailOptions);
+
+    user.loginUser(res, email);
     res.redirect('/dashboard');
 
-    return true;
+    return;
 });
 
 module.exports = router;

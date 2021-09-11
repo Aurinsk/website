@@ -22,7 +22,7 @@ $.ajaxSetup({
 
 const email = getCookie('email');
 
-$.get(`http://192.168.1.251:3000/api/query/${email}`, (data) => {
+$.get(`http://192.168.1.251:3000/query/monitors/${email}`, (data) => {
 
     let upMonitors = 0;
     let downMonitors = 0;
@@ -35,7 +35,7 @@ $.get(`http://192.168.1.251:3000/api/query/${email}`, (data) => {
 
     for (const row of data) {
         cpuUsagePromises.push(new Promise((res, rej) => {
-            $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/cpu_usage/10m`, (cpu) => {
+            $.get(`http://192.168.1.251:3000/query/graph/${row.uuid}/cpu_usage/10m`, (cpu) => {
                 if (cpu[0].length) {
                     cpuUsage.push(...cpu[0]);
                     res('Received');
@@ -46,7 +46,7 @@ $.get(`http://192.168.1.251:3000/api/query/${email}`, (data) => {
         }));
 
         memoryUsagePromises.push(new Promise((res, rej) => {
-            $.get(`http://192.168.1.251:3000/api/query/${row.uuid}/memory_usage/10m`, (memory) => {
+            $.get(`http://192.168.1.251:3000/query/graph/${row.uuid}/memory_usage/10m`, (memory) => {
                 if (memory[0].length) {
                     memoryUsage.push(...memory[0]);
                     res('Received');
@@ -66,8 +66,17 @@ $.get(`http://192.168.1.251:3000/api/query/${email}`, (data) => {
         const avgCpu = (parseFloat(average(cpuUsage).toFixed(4)) * 100).toString() + "%";
         const avgMem = (parseFloat(average(memoryUsage).toFixed(2))).toString() + " MB";
 
-        $('.avg-cpu').text(avgCpu);
-        $('.avg-mem').text(avgMem);
+        if (isNaN(avgCpu)) {
+            $('.avg-cpu').text('0%');
+        } else {
+            $('.avg-cpu').text(avgCpu);
+        }
+
+        if (isNaN(avgMem)) {
+            $('.avg-mem').text('0 MB');
+        } else {
+            $('.avg-mem').text(avgMem);
+        }
     })
 
     $('.up-monitors').text(upMonitors);
