@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
     
     Please click the link below to confirm your waiting list placement.
     
-    http://localhost:3000/waitinglist/confirm/${verificationCode}
+    https://aurinsk.com/waitinglist/confirm/${verificationCode}
     `;
     messageBody = messageBody
         .split("\n")
