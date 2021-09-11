@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
         }
     });
     const mailOptions = {
-        from: 'Waiting List Confirmation <waitinglist@aurinsk.com>',
+        from: 'Waiting List <waitinglist@aurinsk.com>',
         to: email,
         subject: `Confirm your waiting list placement`,
         text: messageBody

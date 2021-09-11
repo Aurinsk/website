@@ -6,6 +6,8 @@ let checkForAnalyticsTimeout;
 let statusAlertTimeout;
 let mainTableTimeout;
 
+const apiUrl = 'http://192.168.1.251:3000';
+
 // get cookie by name
 function getCookie(name) {
     let cookieArr = document.cookie.split(";");
@@ -13,7 +15,7 @@ function getCookie(name) {
     for (let i = 0; i < cookieArr.length; i++) {
         let cookiePair = cookieArr[i].split("=");
 
-        if(name == cookiePair[0].trim()) {
+        if (name == cookiePair[0].trim()) {
             return decodeURIComponent(cookiePair[1]);
         }
     }
@@ -33,7 +35,7 @@ $('#refreshMonitors').click(() => {
 });
 
 function mainTable() {
-    $.get(`http://192.168.1.251:3000/api/query/monitors/${getCookie('email')}`, ((data) => {
+    $.get(`${apiUrl}/query/monitors/${getCookie('email')}`, ((data) => {
         // check if any rows already exist, if they do, delete them
         if ($('.monitors').length) {
             $('.monitors').remove();
@@ -138,27 +140,27 @@ function mainTable() {
                     }
 
                     const response = await Promise.all([
-                        fetch(`http://192.168.1.251:3000/api/query/recent/minecraftVersion/${row.uuid}`, {
+                        fetch(`${apiUrl}/query/recent/minecraftVersion/${row.uuid}`, {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
                         }),
-                        fetch(`http://192.168.1.251:3000/api/query/recent/ip/${row.uuid}`, {
+                        fetch(`${apiUrl}/query/recent/ip/${row.uuid}`, {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
                         }),
-                        fetch(`http://192.168.1.251:3000/api/query/status/${row.uuid}`, {
+                        fetch(`${apiUrl}/query/status/${row.uuid}`, {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
                         }),
-                        fetch(`http://192.168.1.251:3000/api/query/recent/pluginVersion/${row.uuid}`, {
+                        fetch(`${apiUrl}/query/recent/pluginVersion/${row.uuid}`, {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
                         }),
-                        fetch(`http://192.168.1.251:3000/api/query/plugin-version`, {
+                        fetch(`${apiUrl}/query/plugin-version`, {
                             headers: {
                                 'Authorization': `Bearer ${getCookie('user')}`
                             }
@@ -244,7 +246,7 @@ function mainTable() {
                                 if (result) {
                                     $(`.monitors.${escapedRowName}`).remove();
 
-                                    fetch(`http://192.168.1.251:3000/api/delete/monitor/${row.uuid}`, {
+                                    fetch(`${apiUrl}/delete/monitor/${row.uuid}`, {
                                         method: 'DELETE',
                                         headers: {
                                             'Authorization': `Bearer ${getCookie('user')}`
@@ -287,7 +289,7 @@ function mainTable() {
                 const selectedTime = $('.time-selector button.active').text();
 
                 function cpuGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/cpu/${time}`, ((data) => {
+                    $.get(`${apiUrl}/query/graph/${row.uuid}/cpu/${time}`, ((data) => {
 
                         // if the canvas already exists, remove it, and recreate it
                         // used for refreshing the graphs every minute
@@ -440,7 +442,7 @@ function mainTable() {
                 }
 
                 function memoryGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/memory/${time}`, ((data) => {
+                    $.get(`${apiUrl}/query/graph/${row.uuid}/memory/${time}`, ((data) => {
 
                         const canvas = helper.createSetAttributes('canvas', {id: 'memory', className: escapedRowName})
 
@@ -583,7 +585,7 @@ function mainTable() {
                 }
 
                 function playercountGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/playercount/${time}`, ((data) => {
+                    $.get(`${apiUrl}/query/graph/${row.uuid}/playercount/${time}`, ((data) => {
 
                         const canvas = helper.createSetAttributes('canvas', {id: 'playercount', className: escapedRowName})
 
@@ -716,7 +718,7 @@ function mainTable() {
                 }
 
                 function tpsGraph(time) {
-                    $.get(`http://192.168.1.251:3000/api/query/graph/${row.uuid}/tps/${time}`, ((data) => {
+                    $.get(`${apiUrl}/query/graph/${row.uuid}/tps/${time}`, ((data) => {
 
                         // const canvas = document.createElement('canvas');
                         const canvas = helper.createSetAttributes('canvas', {id: 'tps', className: escapedRowName});
@@ -899,7 +901,7 @@ $('#addMonitorForm').submit((e) => {
 
     // check api every 2.5 seconds if analytics has been received for the entered ip address
     function checkForAnalytics() {
-        $.post('http://192.168.1.251:3000/api/create', {ip: $('#ipAddress').val(), email: getCookie('email'), name: $('#minecraftMonitorName').val()}, (data) => {
+        $.post(`${apiUrl}/create`, {ip: $('#ipAddress').val(), email: getCookie('email'), name: $('#minecraftMonitorName').val()}, (data) => {
             if (data === 'exists') {
                 const alreadyExists = helper.createSetAttributes('div', {className: 'alert alert-danger', id: 'alreadyExists', textContent: 'The monitor belonging to this IP address is already owned by you or somebody else'});
 
